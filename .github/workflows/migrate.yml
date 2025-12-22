@@ -1,0 +1,33 @@
+# Prisma Migration Workflow (Opsiyonel)
+# Bu workflow, Vercel deploy sonrası otomatik migration çalıştırmak için kullanılabilir
+# Ancak manuel migration önerilir (daha güvenli)
+
+name: Database Migration
+
+on:
+  workflow_dispatch: # Manuel tetikleme
+  # Vercel deploy sonrası otomatik çalıştırmak için:
+  # repository_dispatch:
+  #   types: [vercel-deployment]
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma migrate deploy
+
