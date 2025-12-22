@@ -1,17 +1,27 @@
 import { prisma } from '@/lib/prisma'
 import VehicleTable from '@/components/VehicleTable'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   // Get all transactions with vehicle and customer information
-  const transactions = await prisma.transaction.findMany({
-    include: {
-      vehicle: true,
-      customer: true,
-    },
-    orderBy: {
-      date: 'desc'
-    }
-  })
+  let transactions = []
+  
+  try {
+    transactions = await prisma.transaction.findMany({
+      include: {
+        vehicle: true,
+        customer: true,
+      },
+      orderBy: {
+        date: 'desc'
+      }
+    })
+  } catch (error) {
+    console.error('Database connection error:', error)
+    // Return empty array if database is not available
+    transactions = []
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
