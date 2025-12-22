@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
 
     // Get client IP
     const forwarded = request.headers.get('x-forwarded-for')
-    const clientIP = forwarded ? forwarded.split(',')[0] : request.ip || 'unknown'
+    const clientIP = forwarded ? forwarded.split(',')[0].trim() : 'unknown'
 
     const note = await prisma.note.create({
       data: {
