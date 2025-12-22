@@ -1,11 +1,17 @@
 import { prisma } from '@/lib/prisma'
 import VehicleTable from '@/components/VehicleTable'
+import { Transaction, Vehicle, Customer } from '@/generated/prisma'
+
+interface TransactionWithRelations extends Transaction {
+  vehicle: Vehicle
+  customer: Customer
+}
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   // Get all transactions with vehicle and customer information
-  let transactions = []
+  let transactions: TransactionWithRelations[] = []
   
   try {
     transactions = await prisma.transaction.findMany({
