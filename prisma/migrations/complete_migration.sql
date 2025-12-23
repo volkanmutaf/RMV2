@@ -40,7 +40,16 @@ ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "lastUpdatedAt" TIMESTAMP;
 -- 4. Update Existing Users (if needed)
 -- ============================================
 -- Update existing users: if email exists, use it as username temporarily
-UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL;
+-- Only run if email column exists
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'email'
+    ) THEN
+        UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL;
+    END IF;
+END $$;
 
 -- ============================================
 -- Migration Complete!
