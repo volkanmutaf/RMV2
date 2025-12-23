@@ -58,6 +58,12 @@ export async function PUT(
       }
     }
     
+    // If note is being changed, update lastUpdatedBy and lastUpdatedAt
+    if (data.note !== undefined && isStatusChange) {
+      updateData.lastUpdatedBy = user.username
+      updateData.lastUpdatedAt = new Date()
+    }
+    
     // Update transaction fields
     const updatedTransaction = await prisma.transaction.update({
       where: { id },

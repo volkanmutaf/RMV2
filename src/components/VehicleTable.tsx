@@ -20,7 +20,14 @@ interface VehicleTableProps {
   currentUser: UserSession | null
 }
 
-export default function VehicleTable({ transactions, currentUser }: VehicleTableProps) {
+export default function VehicleTable({ transactions: initialTransactions, currentUser }: VehicleTableProps) {
+  const [transactions, setTransactions] = useState<TransactionWithRelations[]>(initialTransactions)
+  
+  // Update transactions when prop changes
+  useEffect(() => {
+    setTransactions(initialTransactions)
+  }, [initialTransactions])
+  
   // Debug: Log transactions
   useEffect(() => {
     console.log('VehicleTable - transactions received:', transactions.length)
@@ -520,6 +527,13 @@ ${mileage}`
         throw new Error('Failed to update status')
       }
       
+      // Refresh transactions to get updated lastUpdatedBy and lastUpdatedAt
+      const refreshResponse = await fetch('/api/transactions')
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setTransactions(data)
+      }
+      
       console.log('Status updated successfully!')
     } catch (error) {
       console.error('Failed to update status:', error)
@@ -586,11 +600,12 @@ ${mileage}`
         [transactionId]: newNote
       }))
       
-      // Update database
+      // Update database with lastUpdatedBy and lastUpdatedAt
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-status-change': 'true' // Mark this as a status change to update lastUpdatedBy
         },
         body: JSON.stringify({
           note: newNote
@@ -601,9 +616,17 @@ ${mileage}`
         throw new Error('Failed to update note')
       }
       
+      // Refresh the page data by reloading transactions
+      window.location.reload()
+      
       console.log('Note updated successfully!')
     } catch (error) {
       console.error('Failed to update note:', error)
+      // Revert local state on error
+      setLocalNotes(prev => ({
+        ...prev,
+        [transactionId]: transactions.find(t => t.id === transactionId)?.note || ''
+      }))
     }
   }
 
@@ -874,8 +897,8 @@ ${mileage}`
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Customer</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Vehicle</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">VIN</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Last Updated By</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Last Updated By</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Plate</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Note</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Contact</th>
@@ -950,33 +973,55 @@ ${mileage}`
                     </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
+                    {canEdit ? (
+                      <select 
+                        className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-full touch-manipulation ${
+                          getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                        }`}
+                        value={localStatuses[transaction.id] || transaction.status || ''}
+                        onChange={(e) => {
+                          handleStatusChange(transaction.id, e.target.value)
+                        }}
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+                        getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                      }`}>
+                        {transaction.status ? 
+                          statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                          transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                          : '-'
+                        }
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
                     {transaction.lastUpdatedBy ? (
-                      <div className="text-xs text-gray-900">
-                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                        {(transaction as any).lastUpdatedAt && (
-                          <div className="text-gray-500 text-[10px] mt-0.5">
-                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        )}
+                      <div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-gray-300 bg-white text-gray-900">
+                        <div>
+                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                          {(transaction as any).lastUpdatedAt && (
+                            <div className="text-gray-500 text-[10px] mt-0.5">
+                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-xs text-gray-400">-</span>
                     )}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    <span className="text-xs font-medium px-2 py-1 rounded-full">
-                      {transaction.status ? 
-                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                        : '-'
-                      }
-                    </span>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <div className="text-xs font-semibold text-gray-900">
@@ -1513,29 +1558,6 @@ ${mileage}`
                 </div>
               </div>
               <div>
-                <span className="text-gray-500">Last Updated By:</span>
-                <div className="font-semibold text-gray-900">
-                  {transaction.lastUpdatedBy ? (
-                    <div>
-                      <div>👤 {transaction.lastUpdatedBy}</div>
-                      {(transaction as any).lastUpdatedAt && (
-                        <div className="text-xs text-gray-500 mt-0.5">
-                          🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    '-'
-                  )}
-                </div>
-              </div>
-              <div>
                 <span className="text-gray-500">Status:</span>
                 {canEdit ? (
                   <select 
@@ -1613,11 +1635,86 @@ ${mileage}`
               </div>
             </div>
             
-            {transaction.note && (
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <span className="text-gray-500 text-xs">Note:</span>
+              {canEdit && editingNote === transaction.id ? (
+                <input
+                  type="text"
+                  className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                  placeholder="Enter note..."
+                  value={noteValues[transaction.id] !== undefined ? noteValues[transaction.id] : (localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note || '')}
+                  onChange={(e) => {
+                    setNoteValues(prev => ({
+                      ...prev,
+                      [transaction.id]: e.target.value
+                    }))
+                  }}
+                  autoFocus
+                  onBlur={(e) => {
+                    const newValue = e.target.value.trim()
+                    handleNoteChange(transaction.id, newValue)
+                    setEditingNote(null)
+                    setNoteValues(prev => {
+                      const updated = {...prev}
+                      delete updated[transaction.id]
+                      return updated
+                    })
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      const newValue = e.currentTarget.value.trim()
+                      handleNoteChange(transaction.id, newValue)
+                      setEditingNote(null)
+                      setNoteValues(prev => {
+                        const updated = {...prev}
+                        delete updated[transaction.id]
+                        return updated
+                      })
+                    } else if (e.key === 'Escape') {
+                      setEditingNote(null)
+                      setNoteValues(prev => {
+                        const updated = {...prev}
+                        delete updated[transaction.id]
+                        return updated
+                      })
+                    }
+                  }}
+                />
+              ) : (
+                <div 
+                  className="text-xs font-semibold text-gray-900 mt-1 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors"
+                  onClick={() => {
+                    if (canEdit) {
+                      setNoteValues(prev => ({
+                        ...prev,
+                        [transaction.id]: localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note || ''
+                      }))
+                      setEditingNote(transaction.id)
+                    }
+                  }}
+                >
+                  {(localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note) || '-'}
+                </div>
+              )}
+            </div>
+            {transaction.lastUpdatedBy && (
               <div className="mt-3 pt-3 border-t border-gray-200">
-                <span className="text-gray-500 text-xs">Note:</span>
-                <div className="text-xs font-semibold text-gray-900 mt-1">
-                  {transaction.note}
+                <span className="text-gray-500 text-xs">Last Updated By:</span>
+                <div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-gray-300 bg-white text-gray-900 mt-1">
+                  <div>
+                    <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                    {(transaction as any).lastUpdatedAt && (
+                      <div className="text-gray-500 text-[10px] mt-0.5">
+                        🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
@@ -1994,7 +2091,7 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {isAdmin && editingNote === transaction.id ? (
+                  {canEdit && editingNote === transaction.id ? (
                     <input
                       type="text"
                       className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
@@ -2041,7 +2138,7 @@ ${mileage}`
                     <div 
                       className="relative inline-flex items-center px-2 py-1 rounded text-xs font-medium cursor-pointer hover:bg-gray-50 transition-colors group border border-gray-300 bg-white text-gray-900 min-w-[100px] h-8"
                       onClick={() => {
-                        if (isAdmin) {
+                        if (canEdit) {
                           setNoteValues(prev => ({
                             ...prev,
                             [transaction.id]: '' // Start with empty input
@@ -2051,7 +2148,7 @@ ${mileage}`
                       }}
                     >
                       {(localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note) || '-'}
-                      {isAdmin && (
+                      {canEdit && (
                         <button
                           className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
                           onClick={(e) => {
