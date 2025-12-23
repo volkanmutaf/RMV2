@@ -93,7 +93,39 @@ export async function GET(request: NextRequest) {
       }
     })
     
-    return NextResponse.json(deals)
+    // Get all transactions to match deal numbers with Ref column
+    const transactions = await prisma.transaction.findMany({
+      include: {
+        vehicle: true,
+        customer: true,
+      },
+      where: {
+        archived: false,
+      }
+    })
+    
+    // Match deals with transactions based on Ref column
+    const dealsWithVehicles = deals.map(deal => {
+      // Find transaction where Ref column matches deal number (4 digits)
+      const matchingTransaction = transactions.find(t => {
+        if (!t.ref) return false
+        // Check if ref contains the 4-digit deal number
+        const refMatch = t.ref.match(/\b\d{4}\b/)
+        return refMatch && refMatch[0] === deal.dealNumber
+      })
+      
+      return {
+        ...deal,
+        vehicle: matchingTransaction ? {
+          year: matchingTransaction.vehicle.year,
+          make: matchingTransaction.vehicle.make,
+          model: matchingTransaction.vehicle.model,
+          vin: matchingTransaction.vehicle.vin,
+        } : null
+      }
+    })
+    
+    return NextResponse.json(dealsWithVehicles)
   } catch (error) {
     console.error('Error fetching deals:', error)
     return NextResponse.json({ error: 'Failed to fetch deals' }, { status: 500 })

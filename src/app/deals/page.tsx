@@ -15,6 +15,12 @@ interface Deal {
   }
   createdAt: string
   updatedAt: string
+  vehicle: {
+    year: string
+    make: string
+    model: string
+    vin: string | null
+  } | null
 }
 
 interface UserSession {
@@ -30,6 +36,7 @@ export default function DealsPage() {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [editingAmount, setEditingAmount] = useState<{[key: string]: string}>({})
+  const [searchTerm, setSearchTerm] = useState('')
   
   useEffect(() => {
     // Check authentication
@@ -88,9 +95,26 @@ export default function DealsPage() {
     }
   }
   
+  // Filter deals based on search term
+  const filteredDeals = deals.filter(deal => {
+    if (!searchTerm) return true
+    const search = searchTerm.toLowerCase()
+    return (
+      deal.dealNumber.toLowerCase().includes(search) ||
+      deal.createdBy.name.toLowerCase().includes(search) ||
+      deal.type.toLowerCase().includes(search) ||
+      (deal.vehicle && (
+        deal.vehicle.year.toLowerCase().includes(search) ||
+        deal.vehicle.make.toLowerCase().includes(search) ||
+        deal.vehicle.model.toLowerCase().includes(search) ||
+        (deal.vehicle.vin && deal.vehicle.vin.toLowerCase().includes(search))
+      ))
+    )
+  })
+  
   // Group deals by user
   const dealsByUser: {[key: string]: Deal[]} = {}
-  deals.forEach(deal => {
+  filteredDeals.forEach(deal => {
     const userName = deal.createdBy.name
     if (!dealsByUser[userName]) {
       dealsByUser[userName] = []
@@ -109,14 +133,27 @@ export default function DealsPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6 flex justify-between items-center">
-          <h1 className="text-3xl font-bold text-gray-900">Deals Management</h1>
-          <button
-            onClick={() => router.push('/')}
-            className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-          >
-            ← Back to Main
-          </button>
+        <div className="mb-6">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl font-bold text-gray-900">Deals Management</h1>
+            <button
+              onClick={() => router.push('/')}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              ← Back to Main
+            </button>
+          </div>
+          
+          {/* Search Bar */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="🔍 Search by deal number, user name, type, vehicle..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
+            />
+          </div>
         </div>
         
         {Object.keys(dealsByUser).length === 0 ? (
@@ -140,6 +177,9 @@ export default function DealsPage() {
                           Deal Number
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Vehicle
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Type
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -155,6 +195,22 @@ export default function DealsPage() {
                         <tr key={deal.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                             {deal.dealNumber}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {deal.vehicle ? (
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
+                                </div>
+                                {deal.vehicle.vin && (
+                                  <div className="text-xs text-gray-400 font-mono">
+                                    VIN: {deal.vehicle.vin}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-400 italic">No vehicle matched</span>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
