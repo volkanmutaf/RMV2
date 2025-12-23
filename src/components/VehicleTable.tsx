@@ -2179,17 +2179,17 @@ ${mileage}`
                     (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
                       ? 'bg-green-500 hover:bg-green-600'
                       : 'bg-orange-500 hover:bg-orange-600'
-                  } text-white px-3 py-2 rounded text-sm font-medium transition-colors cursor-pointer`}
+                  } text-white px-2 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer`}
                   title="Add to archive"
                 >
-                  📁 Add to Archive
+                  📁 Archive
                 </button>
                 <button
                   onClick={() => confirmDelete(transaction.id)}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors cursor-pointer"
+                  className="w-full bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer"
                   title="Delete permanently"
                 >
-                  🗑️ Delete Permanently
+                  🗑️ Delete
                 </button>
               </div>
             )}
