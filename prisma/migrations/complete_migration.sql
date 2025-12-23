@@ -4,15 +4,15 @@
 -- ============================================
 -- 1. Users Table Updates
 -- ============================================
--- First, copy email to username if email column exists
+-- First, copy email to username if email column exists (using dynamic SQL)
 DO $$ 
 BEGIN
     IF EXISTS (
         SELECT 1 FROM information_schema.columns 
         WHERE table_name = 'users' AND column_name = 'email'
     ) THEN
-        -- Update username from email before dropping email column
-        UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL;
+        -- Update username from email before dropping email column (using EXECUTE for dynamic SQL)
+        EXECUTE 'UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL';
     END IF;
 END $$;
 
