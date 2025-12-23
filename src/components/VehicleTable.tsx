@@ -597,27 +597,27 @@ ${mileage}`
   const getStatusColorClasses = (status: string) => {
     switch (status) {
       case 'REGISTERED':
-        return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300 shadow-sm'
+        return 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200 shadow-sm'
       case 'PICKED_UP':
-        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-sm'
+        return 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200 shadow-sm'
       case 'INSPECTED':
-        return 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300 shadow-sm'
+        return 'bg-gradient-to-r from-indigo-50 to-indigo-100 text-indigo-700 border-indigo-200 shadow-sm'
       case 'TRANSFER_PLATE':
-        return 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300 shadow-sm'
+        return 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200 shadow-sm'
       case 'RE_INSPECTION':
-        return 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border-amber-300 shadow-sm'
+        return 'bg-gradient-to-r from-amber-50 to-amber-100 text-amber-700 border-amber-200 shadow-sm'
       case 'READY_FOR_PICKUP':
-        return 'bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 border-teal-300 shadow-sm'
+        return 'bg-gradient-to-r from-teal-50 to-teal-100 text-teal-700 border-teal-200 shadow-sm'
       case 'TITLE_PENDING':
-        return 'bg-gradient-to-r from-gray-700 to-gray-800 text-gray-100 border-gray-600 shadow-sm'
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm'
       case 'AWAITING_STAMP':
-        return 'bg-gradient-to-r from-pink-100 to-pink-200 text-pink-800 border-pink-300 shadow-sm'
+        return 'bg-gradient-to-r from-pink-50 to-pink-100 text-pink-700 border-pink-200 shadow-sm'
       case 'TITLE_REQUESTED':
-        return 'bg-gradient-to-r from-cyan-100 to-cyan-200 text-cyan-800 border-cyan-300 shadow-sm'
+        return 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border-cyan-200 shadow-sm'
       case 'DEPOSIT':
-        return 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-300 shadow-sm'
+        return 'bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 border-slate-200 shadow-sm'
       default:
-        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-sm'
+        return 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200 shadow-sm'
     }
   }
 
@@ -625,25 +625,25 @@ ${mileage}`
   const getRowColorClasses = (status: string) => {
     switch (status) {
       case 'REGISTERED':
-        return 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-400 shadow-sm'
+        return 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-300 shadow-sm'
       case 'PICKED_UP':
-        return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-400 shadow-sm'
+        return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-300 shadow-sm'
       case 'INSPECTED':
-        return 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-l-4 border-indigo-400 shadow-sm'
+        return 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-l-4 border-indigo-300 shadow-sm'
       case 'TRANSFER_PLATE':
-        return 'bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-400 shadow-sm'
+        return 'bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-300 shadow-sm'
       case 'RE_INSPECTION':
-        return 'bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-400 shadow-sm'
+        return 'bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-300 shadow-sm'
       case 'READY_FOR_PICKUP':
-        return 'bg-gradient-to-r from-teal-50 to-teal-100 border-l-4 border-teal-400 shadow-sm'
+        return 'bg-gradient-to-r from-teal-50 to-teal-100 border-l-4 border-teal-300 shadow-sm'
       case 'TITLE_PENDING':
-        return 'bg-gradient-to-r from-gray-600 to-gray-700 border-l-4 border-gray-800 shadow-sm'
+        return 'bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-300 shadow-sm'
       case 'AWAITING_STAMP':
-        return 'bg-gradient-to-r from-pink-50 to-pink-100 border-l-4 border-pink-400 shadow-sm'
+        return 'bg-gradient-to-r from-pink-50 to-pink-100 border-l-4 border-pink-300 shadow-sm'
       case 'TITLE_REQUESTED':
-        return 'bg-gradient-to-r from-cyan-50 to-cyan-100 border-l-4 border-cyan-400 shadow-sm'
+        return 'bg-gradient-to-r from-cyan-50 to-cyan-100 border-l-4 border-cyan-300 shadow-sm'
       case 'DEPOSIT':
-        return 'bg-gradient-to-r from-slate-50 to-slate-100 border-l-4 border-slate-300 shadow-sm'
+        return 'bg-gradient-to-r from-slate-50 to-slate-100 border-l-4 border-slate-200 shadow-sm'
       default:
         return ''
     }
@@ -2709,16 +2709,13 @@ ${mileage}`
                 <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2 flex-wrap">
                     {/* Pre-inspection Checkbox */}
-                    <label className="flex items-center gap-1 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={(transaction as any).preInspection || false}
-                        onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                        title="Pre-inspection completed"
-                      />
-                      <span className="text-xs text-gray-600">Pre-Insp</span>
-                    </label>
+                    <input
+                      type="checkbox"
+                      checked={(transaction as any).preInspection || false}
+                      onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                      title="Pre-inspection completed"
+                    />
                     
                     {isAdmin && (
                       <>
