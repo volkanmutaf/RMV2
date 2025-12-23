@@ -48,7 +48,6 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
   const [localNotes, setLocalNotes] = useState<{[key: string]: string}>({})
   const [localRefs, setLocalRefs] = useState<{[key: string]: string}>({})
   const [localPlates, setLocalPlates] = useState<{[key: string]: string}>({})
-  const [localPayments, setLocalPayments] = useState<{[key: string]: string}>({})
   const [localStatuses, setLocalStatuses] = useState<{[key: string]: string}>({})
   const [localTaxes, setLocalTaxes] = useState<{[key: string]: string}>({})
   const [isClient, setIsClient] = useState(false)
@@ -96,7 +95,6 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
   } | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
-  const [filterPayment, setFilterPayment] = useState('')
   const [sortBy, setSortBy] = useState('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
 
@@ -118,21 +116,18 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
     const initialNotes: {[key: string]: string} = {}
     const initialRefs: {[key: string]: string} = {}
     const initialPlates: {[key: string]: string} = {}
-    const initialPayments: {[key: string]: string} = {}
     const initialStatuses: {[key: string]: string} = {}
     const initialTaxes: {[key: string]: string} = {}
     transactions.forEach(transaction => {
       initialNotes[transaction.id] = transaction.note || ''
       initialRefs[transaction.id] = transaction.ref || ''
       initialPlates[transaction.id] = transaction.plate || ''
-      initialPayments[transaction.id] = transaction.payment || 'UNPAID'
       initialStatuses[transaction.id] = transaction.status || ''
       initialTaxes[transaction.id] = transaction.tax?.toString() || ''
     })
     setLocalNotes(initialNotes)
     setLocalRefs(initialRefs)
     setLocalPlates(initialPlates)
-    setLocalPayments(initialPayments)
     setLocalStatuses(initialStatuses)
     setLocalTaxes(initialTaxes)
   }, [transactions])
@@ -449,8 +444,6 @@ ${mileage}`
             name: editableData.customer || '',
             contact: editableData.contact || ''
           },
-          payment: 'UNPAID',
-          tax: null,
           status: null,
           plate: '',
           note: '',
@@ -567,23 +560,6 @@ ${mileage}`
     }
   }
 
-  const getPaymentColorClasses = (status: string) => {
-    // Status rengine göre payment butonunun rengini belirle
-    const statusColors = {
-      'REGISTERED': 'from-red-100 to-red-200 text-red-800 border-red-300',
-      'PICKED_UP': 'from-green-100 to-green-200 text-green-800 border-green-300',
-      'INSPECTED': 'from-blue-100 to-blue-200 text-blue-800 border-blue-300',
-      'TRANSFER_PLATE': 'from-purple-100 to-purple-200 text-purple-800 border-purple-300',
-      'RE_INSPECTION': 'from-orange-100 to-orange-200 text-orange-800 border-orange-300',
-      'READY_FOR_PICKUP': 'from-emerald-100 to-emerald-200 text-emerald-800 border-emerald-300',
-      'TITLE_PENDING': 'from-red-100 to-red-200 text-red-800 border-red-300',
-      'AWAITING_STAMP': 'from-orange-100 to-orange-200 text-orange-800 border-orange-300'
-    }
-    
-    const colorClass = statusColors[status as keyof typeof statusColors] || 'from-gray-100 to-gray-200 text-gray-800 border-gray-300'
-    
-    return `bg-gradient-to-r ${colorClass} border shadow-sm`
-  }
 
   const getRowColorClasses = (status: string) => {
     switch (status) {
@@ -796,34 +772,6 @@ ${mileage}`
     }
   }
 
-  const handlePaymentChange = async (transactionId: string, newPayment: string) => {
-    try {
-      // Update local state immediately
-      setLocalPayments(prev => ({
-        ...prev,
-        [transactionId]: newPayment
-      }))
-      
-      // Update database
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          payment: newPayment
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to update payment')
-      }
-      
-      console.log('Payment updated successfully!')
-    } catch (error) {
-      console.error('Failed to update payment:', error)
-    }
-  }
 
   const handleTaxChange = async (transactionId: string, newTax: string) => {
     try {
@@ -888,9 +836,7 @@ ${mileage}`
       matchesStatus = transaction.status === filterStatus
     }
     
-    const matchesPayment = filterPayment === '' || transaction.payment === filterPayment
-    
-    return matchesSearch && matchesStatus && matchesPayment
+    return matchesSearch && matchesStatus
   })
 
   // Sort functionality
@@ -914,10 +860,6 @@ ${mileage}`
         aValue = a.status || ''
         bValue = b.status || ''
         break
-      case 'payment':
-        aValue = a.payment
-        bValue = b.payment
-        break
       default:
         return 0
     }
@@ -937,12 +879,11 @@ ${mileage}`
     console.log('- sortedTransactions:', sortedTransactions.length)
     console.log('- searchTerm:', searchTerm)
     console.log('- filterStatus:', filterStatus)
-    console.log('- filterPayment:', filterPayment)
     if (transactions.length > 0) {
       console.log('- First transaction:', transactions[0])
       console.log('- First transaction archived:', transactions[0].archived)
     }
-  }, [transactions, filteredTransactions, sortedTransactions, searchTerm, filterStatus, filterPayment])
+  }, [transactions, filteredTransactions, sortedTransactions, searchTerm, filterStatus])
 
   const getStatusColor = (status: VehicleStatus | null) => {
     switch (status) {
@@ -968,10 +909,7 @@ ${mileage}`
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Customer</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Vehicle</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">VIN</th>
-{isAdmin && (
-                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Payment</th>
-              )}
-                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Tax</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Last Updated By</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Plate</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Note</th>
@@ -1047,14 +985,24 @@ ${mileage}`
                     </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <div className="text-xs font-medium text-gray-900">
-                      {transaction.payment === 'PAID' ? 'Paid' : 'Unpaid'}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
-                    <div className="text-xs font-semibold text-gray-900">
-                      {transaction.tax ? `$${transaction.tax.toFixed(2)}` : '-'}
-                    </div>
+                    {transaction.lastUpdatedBy ? (
+                      <div className="text-xs text-gray-900">
+                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                        {(transaction as any).lastUpdatedAt && (
+                          <div className="text-gray-500 text-[10px] mt-0.5">
+                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <span className="text-xs font-medium px-2 py-1 rounded-full">
@@ -1310,28 +1258,12 @@ ${mileage}`
             </select>
           </div>
           
-          {/* Payment Filter - Admin Only */}
-          {isAdmin && (
-            <div className="sm:w-32">
-              <select
-                value={filterPayment}
-                onChange={(e) => setFilterPayment(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900"
-              >
-                <option value="">All Payments</option>
-                <option value="PAID">Paid</option>
-                <option value="UNPAID">Unpaid</option>
-              </select>
-            </div>
-          )}
-          
           
           {/* Clear Button */}
           <button
             onClick={() => {
               setSearchTerm('')
               setFilterStatus('')
-              setFilterPayment('')
               setSortBy('date')
               setSortOrder('desc')
             }}
@@ -1634,9 +1566,26 @@ ${mileage}`
                 </div>
               </div>
               <div>
-                <span className="text-gray-500">Tax:</span>
+                <span className="text-gray-500">Last Updated By:</span>
                 <div className="font-semibold text-gray-900">
-                  {transaction.tax ? `$${transaction.tax.toFixed(2)}` : '-'}
+                  {transaction.lastUpdatedBy ? (
+                    <div>
+                      <div>👤 {transaction.lastUpdatedBy}</div>
+                      {(transaction as any).lastUpdatedAt && (
+                        <div className="text-xs text-gray-500 mt-0.5">
+                          🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    '-'
+                  )}
                 </div>
               </div>
               <div>
@@ -1791,21 +1740,8 @@ ${mileage}`
               <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500">
                 🔢 VIN
               </th>
-              <th 
-                className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500 cursor-pointer hover:bg-slate-600 transition-colors select-none"
-                onClick={() => handleSort('payment')}
-              >
-                <div className="flex items-center gap-1">
-                  💰 Payment
-                  {sortBy === 'payment' && (
-                    <span className="text-blue-300">
-                      {sortOrder === 'asc' ? '↑' : '↓'}
-                    </span>
-                  )}
-                </div>
-              </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500">
-                💵 Tax
+                👤 Last Updated By
               </th>
               <th 
                 className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500 cursor-pointer hover:bg-slate-600 transition-colors select-none"
@@ -1927,96 +1863,24 @@ ${mileage}`
                     {transaction.vehicle.vin || '-'}
                   </div>
                 </td>
-{isAdmin && (
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <select 
-                    className="text-xs font-medium border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[100px] shadow-sm hover:border-gray-400 transition-colors bg-white text-gray-900"
-                    value={localPayments[transaction.id] || transaction.payment || 'UNPAID'}
-                    onChange={(e) => {
-                      handlePaymentChange(transaction.id, e.target.value)
-                    }}
-                  >
-                    <option value="PAID" className="text-gray-900 bg-white">Paid</option>
-                    <option value="UNPAID" className="text-gray-900 bg-white">Unpaid</option>
-                  </select>
-                </td>
-              )}
-                <td className="px-3 py-2 whitespace-nowrap">
-                  {isAdmin && editingTax === transaction.id ? (
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      placeholder="Enter tax..."
-                      value={taxValues[transaction.id] || ''}
-                      onChange={(e) => {
-                        setTaxValues(prev => ({
-                          ...prev,
-                          [transaction.id]: e.target.value
-                        }))
-                      }}
-                      autoFocus
-                      onBlur={(e) => {
-                        const newValue = e.target.value.trim()
-                        handleTaxChange(transaction.id, newValue)
-                        setEditingTax(null)
-                        setTaxValues(prev => {
-                          const updated = {...prev}
-                          delete updated[transaction.id]
-                          return updated
-                        })
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const newValue = e.currentTarget.value.trim()
-                          handleTaxChange(transaction.id, newValue)
-                          setEditingTax(null)
-                          setTaxValues(prev => {
-                            const updated = {...prev}
-                            delete updated[transaction.id]
-                            return updated
-                          })
-                        } else if (e.key === 'Escape') {
-                          setEditingTax(null)
-                          setTaxValues(prev => {
-                            const updated = {...prev}
-                            delete updated[transaction.id]
-                            return updated
-                          })
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div 
-                      className="relative inline-flex items-center px-2 py-1 rounded text-xs font-medium cursor-pointer hover:bg-gray-50 transition-colors group border border-gray-300 bg-white text-gray-900 min-w-[80px] h-8"
-                      onClick={() => {
-                        if (isAdmin) {
-                          setTaxValues(prev => ({
-                            ...prev,
-                            [transaction.id]: '' // Start with empty input
-                          }))
-                          setEditingTax(transaction.id)
-                        }
-                      }}
-                    >
-                      {(localTaxes[transaction.id] !== undefined ? localTaxes[transaction.id] : transaction.tax?.toString()) ? 
-                        `$${(localTaxes[transaction.id] !== undefined ? parseFloat(localTaxes[transaction.id]) || 0 : transaction.tax || 0).toFixed(2)}` : 
-                        '-'
-                      }
-                      {isAdmin && (
-                        <button
-                          className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            handleTaxChange(transaction.id, '')
-                          }}
-                          title="Clear tax"
-                        >
-                          ×
-                        </button>
+                  {transaction.lastUpdatedBy ? (
+                    <div className="text-xs text-gray-900">
+                      <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                      {(transaction as any).lastUpdatedAt && (
+                        <div className="text-gray-500 text-[10px] mt-0.5">
+                          🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
                       )}
                     </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">-</span>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -2388,20 +2252,19 @@ ${mileage}`
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8">
               <div className="text-6xl mb-4">🔍</div>
               <p className="text-gray-600 text-xl font-semibold mb-2">
-                {searchTerm || filterStatus || filterPayment ? 'No matching records found' : 'No records found'}
+                {searchTerm || filterStatus ? 'No matching records found' : 'No records found'}
               </p>
               <p className="text-gray-400 text-sm mb-4">
-                {searchTerm || filterStatus || filterPayment 
+                {searchTerm || filterStatus 
                   ? 'Try adjusting your search criteria or filters' 
                   : 'Use the Quick Add button above to add new records'
                 }
               </p>
-              {(searchTerm || filterStatus || filterPayment) && (
+              {(searchTerm || filterStatus) && (
                 <button
                   onClick={() => {
                     setSearchTerm('')
                     setFilterStatus('')
-                    setFilterPayment('')
                   }}
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
                 >

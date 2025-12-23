@@ -58,8 +58,6 @@ model Transaction {
   vehicleId String
   customerId String
   date      DateTime
-  payment   PaymentStatus @default(UNPAID)
-  tax       Float?
   status    VehicleStatus?
   plate     String?
   note      String?

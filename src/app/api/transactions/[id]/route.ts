@@ -44,8 +44,6 @@ export async function PUT(
     
     // Prepare update data
     const updateData: any = {
-      payment: data.payment,
-      tax: data.tax ? parseFloat(data.tax) : null,
       plate: data.plate,
       note: data.note,
       ref: data.ref

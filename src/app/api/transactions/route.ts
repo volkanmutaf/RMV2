@@ -82,8 +82,6 @@ export async function POST(request: NextRequest) {
             contact: data.customer.contact
           }
         },
-        payment: data.payment || 'UNPAID',
-        tax: data.tax,
         status: data.status,
         plate: data.plate,
         note: data.note,
