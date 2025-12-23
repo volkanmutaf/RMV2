@@ -767,35 +767,6 @@ ${mileage}`
   }
 
 
-  const handleTaxChange = async (transactionId: string, newTax: string) => {
-    try {
-      // Update local state immediately
-      setLocalTaxes(prev => ({
-        ...prev,
-        [transactionId]: newTax
-      }))
-      
-      // Update database
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          tax: newTax ? parseFloat(newTax) : null
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to update tax')
-      }
-      
-      console.log('Tax updated successfully!')
-    } catch (error) {
-      console.error('Failed to update tax:', error)
-    }
-  }
-
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: '2-digit',
