@@ -1766,9 +1766,6 @@ ${mileage}`
               <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500">
                 🔢 VIN
               </th>
-              <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500">
-                👤 Last Updated By
-              </th>
               <th 
                 className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500 cursor-pointer hover:bg-slate-600 transition-colors select-none"
                 onClick={() => handleSort('status')}
@@ -1893,26 +1890,6 @@ ${mileage}`
                   </div>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {transaction.lastUpdatedBy ? (
-                    <div className="text-xs text-gray-900">
-                      <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                      {(transaction as any).lastUpdatedAt && (
-                        <div className="text-gray-500 text-[10px] mt-0.5">
-                          🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                            month: 'short',
-                            day: 'numeric',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <span className="text-xs text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="px-3 py-2 whitespace-nowrap">
                   {canEdit ? (
                     <>
                       <select 
@@ -1956,22 +1933,6 @@ ${mileage}`
                           </option>
                         ))}
                       </select>
-                      {transaction.lastUpdatedBy && (
-                        <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                          {(transaction as any).lastUpdatedAt && (
-                            <div className="text-gray-500 text-[10px]">
-                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </>
                   ) : (
                     <div className="flex flex-col">
