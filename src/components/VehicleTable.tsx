@@ -204,11 +204,24 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     }
     
     // Parse customer name (look for name pattern - usually after VIN/stock info)
+    // First, find VIN line index to search after it
+    let vinLineIndex = -1
     for (let i = 0; i < lines.length; i++) {
+      if (lines[i].match(/\b[A-HJ-NPR-Z0-9]{17}\b/)) {
+        vinLineIndex = i
+        break
+      }
+    }
+    
+    // Start searching from after VIN line (or from beginning if VIN not found)
+    const startIndex = vinLineIndex >= 0 ? vinLineIndex + 1 : 0
+    
+    for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i]
       // Skip lines that look like vehicle info, VIN, stock, mileage, etc.
       if (!line.match(/^\d{4}\s/) && // Not year
-          !line.match(/^\d+/) && // Not starting with numbers
+          !line.match(/^[A-HJ-NPR-Z0-9]{17}$/) && // Not VIN (exact match)
+          !line.match(/\b[A-HJ-NPR-Z0-9]{17}\b/) && // Not VIN (anywhere in line)
           !line.match(/Stock\s*#/) && // Not stock number
           !line.match(/\d+\s*days/) && // Not days
           !line.match(/\d+,\d+\s*miles/) && // Not mileage
@@ -221,7 +234,10 @@ export default function VehicleTable({ transactions: initialTransactions, curren
           !line.match(/Pre-Qual/) && // Not status
           !line.match(/Credit Report/) && // Not report type
           !line.match(/TurboPass Report/) && // Not report type
-          line.length > 2 && line.length < 50) { // Reasonable name length
+          !line.match(/^\d+\s+\w+\s+St/) && // Not street address
+          !line.match(/,\s*[A-Z]{2}\s+\d{5}/) && // Not address with state zip
+          line.length > 2 && line.length < 50 && // Reasonable name length
+          /^[A-Z][a-z]+\s+[A-Z][a-z]+/.test(line)) { // Looks like "FirstName LastName"
         customer = line
         break
       }
