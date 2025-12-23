@@ -2724,14 +2724,14 @@ ${mileage}`
                             (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
                               ? 'bg-green-500 hover:bg-green-600'
                               : 'bg-orange-500 hover:bg-orange-600'
-                          } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
+                          } text-white px-1.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer text-[10px]`}
                       title="Add to archive"
                     >
                       📁
                     </button>
                         <button
                           onClick={() => confirmDelete(transaction.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+                          className="bg-red-500 hover:bg-red-600 text-white px-1.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer text-[10px]"
                           title="Delete permanently"
                         >
                           🗑️
