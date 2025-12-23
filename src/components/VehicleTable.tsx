@@ -2021,63 +2021,65 @@ ${mileage}`
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {canEdit ? (
-                    <select 
-                      className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] shadow-sm hover:border-gray-400 transition-colors ${
-                        getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
-                      }`}
-                      value={localStatuses[transaction.id] || transaction.status || ''}
-                      onChange={(e) => {
-                        handleStatusChange(transaction.id, e.target.value)
-                      }}
-                      style={{
-                        backgroundColor: (() => {
-                          const status = localStatuses[transaction.id] || transaction.status || ''
-                          if (status === 'REGISTERED') return '#fef2f2'
-                          if (status === 'PICKED_UP') return '#f0fdf4'
-                          if (status === 'INSPECTED') return '#eff6ff'
-                          if (status === 'TRANSFER_PLATE') return '#faf5ff'
-                          if (status === 'RE_INSPECTION') return '#fff7ed'
-                          if (status === 'READY_FOR_PICKUP') return '#ecfdf5'
-                          if (status === 'TITLE_PENDING') return '#fef2f2'
-                          if (status === 'AWAITING_STAMP') return '#fff7ed'
-                          return '#f9fafb'
-                        })(),
-                        color: (() => {
-                          const status = localStatuses[transaction.id] || transaction.status || ''
-                          if (status === 'REGISTERED') return '#991b1b'
-                          if (status === 'PICKED_UP') return '#166534'
-                          if (status === 'INSPECTED') return '#1e40af'
-                          if (status === 'TRANSFER_PLATE') return '#7c3aed'
-                          if (status === 'RE_INSPECTION') return '#c2410c'
-                          if (status === 'READY_FOR_PICKUP') return '#047857'
-                          if (status === 'TITLE_PENDING') return '#991b1b'
-                          if (status === 'AWAITING_STAMP') return '#c2410c'
-                          return '#374151'
-                        })()
-                      }}
-                    >
-                      {statusOptions.map((option) => (
-                        <option key={option.value} value={option.value} className="text-gray-900 bg-white">
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                    {transaction.lastUpdatedBy && (
-                      <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                        {(transaction as any).lastUpdatedAt && (
-                          <div className="text-gray-500 text-[10px]">
-                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <>
+                      <select 
+                        className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] shadow-sm hover:border-gray-400 transition-colors ${
+                          getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                        }`}
+                        value={localStatuses[transaction.id] || transaction.status || ''}
+                        onChange={(e) => {
+                          handleStatusChange(transaction.id, e.target.value)
+                        }}
+                        style={{
+                          backgroundColor: (() => {
+                            const status = localStatuses[transaction.id] || transaction.status || ''
+                            if (status === 'REGISTERED') return '#fef2f2'
+                            if (status === 'PICKED_UP') return '#f0fdf4'
+                            if (status === 'INSPECTED') return '#eff6ff'
+                            if (status === 'TRANSFER_PLATE') return '#faf5ff'
+                            if (status === 'RE_INSPECTION') return '#fff7ed'
+                            if (status === 'READY_FOR_PICKUP') return '#ecfdf5'
+                            if (status === 'TITLE_PENDING') return '#fef2f2'
+                            if (status === 'AWAITING_STAMP') return '#fff7ed'
+                            return '#f9fafb'
+                          })(),
+                          color: (() => {
+                            const status = localStatuses[transaction.id] || transaction.status || ''
+                            if (status === 'REGISTERED') return '#991b1b'
+                            if (status === 'PICKED_UP') return '#166534'
+                            if (status === 'INSPECTED') return '#1e40af'
+                            if (status === 'TRANSFER_PLATE') return '#7c3aed'
+                            if (status === 'RE_INSPECTION') return '#c2410c'
+                            if (status === 'READY_FOR_PICKUP') return '#047857'
+                            if (status === 'TITLE_PENDING') return '#991b1b'
+                            if (status === 'AWAITING_STAMP') return '#c2410c'
+                            return '#374151'
+                          })()
+                        }}
+                      >
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {transaction.lastUpdatedBy && (
+                        <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                          {(transaction as any).lastUpdatedAt && (
+                            <div className="text-gray-500 text-[10px]">
+                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
                   ) : (
                     <div className="flex flex-col">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
