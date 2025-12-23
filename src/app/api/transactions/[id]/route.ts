@@ -90,6 +90,11 @@ export async function PUT(
       updateData.isUrgent = data.isUrgent
     }
     
+    // If preInspection is being changed
+    if (data.preInspection !== undefined) {
+      updateData.preInspection = data.preInspection
+    }
+    
     // Update transaction fields
     const updatedTransaction = await prisma.transaction.update({
       where: { id },

@@ -597,25 +597,25 @@ ${mileage}`
   const getStatusColorClasses = (status: string) => {
     switch (status) {
       case 'REGISTERED':
-        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300 shadow-sm'
+        return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300 shadow-sm'
       case 'PICKED_UP':
         return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-sm'
       case 'INSPECTED':
-        return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border-blue-300 shadow-sm'
+        return 'bg-gradient-to-r from-indigo-100 to-indigo-200 text-indigo-800 border-indigo-300 shadow-sm'
       case 'TRANSFER_PLATE':
         return 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border-purple-300 shadow-sm'
       case 'RE_INSPECTION':
-        return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300 shadow-sm'
+        return 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border-amber-300 shadow-sm'
       case 'READY_FOR_PICKUP':
-        return 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 border-emerald-300 shadow-sm'
+        return 'bg-gradient-to-r from-teal-100 to-teal-200 text-teal-800 border-teal-300 shadow-sm'
       case 'TITLE_PENDING':
-        return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300 shadow-sm'
+        return 'bg-gradient-to-r from-gray-700 to-gray-800 text-gray-100 border-gray-600 shadow-sm'
       case 'AWAITING_STAMP':
-        return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300 shadow-sm'
+        return 'bg-gradient-to-r from-pink-100 to-pink-200 text-pink-800 border-pink-300 shadow-sm'
       case 'TITLE_REQUESTED':
-        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-sm'
+        return 'bg-gradient-to-r from-cyan-100 to-cyan-200 text-cyan-800 border-cyan-300 shadow-sm'
       case 'DEPOSIT':
-        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm'
+        return 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border-slate-300 shadow-sm'
       default:
         return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-sm'
     }
@@ -625,25 +625,25 @@ ${mileage}`
   const getRowColorClasses = (status: string) => {
     switch (status) {
       case 'REGISTERED':
-        return 'bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 shadow-sm'
+        return 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-400 shadow-sm'
       case 'PICKED_UP':
         return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-400 shadow-sm'
       case 'INSPECTED':
-        return 'bg-gradient-to-r from-blue-50 to-blue-100 border-l-4 border-blue-400 shadow-sm'
+        return 'bg-gradient-to-r from-indigo-50 to-indigo-100 border-l-4 border-indigo-400 shadow-sm'
       case 'TRANSFER_PLATE':
         return 'bg-gradient-to-r from-purple-50 to-purple-100 border-l-4 border-purple-400 shadow-sm'
       case 'RE_INSPECTION':
-        return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-sm'
+        return 'bg-gradient-to-r from-amber-50 to-amber-100 border-l-4 border-amber-400 shadow-sm'
       case 'READY_FOR_PICKUP':
-        return 'bg-gradient-to-r from-emerald-50 to-emerald-100 border-l-4 border-emerald-400 shadow-sm'
+        return 'bg-gradient-to-r from-teal-50 to-teal-100 border-l-4 border-teal-400 shadow-sm'
       case 'TITLE_PENDING':
-        return 'bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 shadow-sm'
+        return 'bg-gradient-to-r from-gray-600 to-gray-700 border-l-4 border-gray-800 shadow-sm'
       case 'AWAITING_STAMP':
-        return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-sm'
+        return 'bg-gradient-to-r from-pink-50 to-pink-100 border-l-4 border-pink-400 shadow-sm'
       case 'TITLE_REQUESTED':
-        return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-400 shadow-sm'
+        return 'bg-gradient-to-r from-cyan-50 to-cyan-100 border-l-4 border-cyan-400 shadow-sm'
       case 'DEPOSIT':
-        return 'bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-300 shadow-sm'
+        return 'bg-gradient-to-r from-slate-50 to-slate-100 border-l-4 border-slate-300 shadow-sm'
       default:
         return ''
     }
@@ -746,6 +746,30 @@ ${mileage}`
     } catch (error) {
       console.error('Failed to update vehicle name:', error)
       showNotificationMessage('Failed to update vehicle name', 'error')
+    }
+  }
+
+  const handlePreInspectionChange = async (transactionId: string, checked: boolean) => {
+    try {
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preInspection: checked }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update pre-inspection status')
+      }
+      
+      const updatedTransaction = await response.json()
+      setTransactions(prev => prev.map(t => t.id === transactionId ? updatedTransaction : t))
+      
+      showNotificationMessage(`Pre-inspection ${checked ? 'marked' : 'unmarked'} successfully!`, 'success')
+    } catch (error) {
+      console.error('Failed to update pre-inspection:', error)
+      showNotificationMessage('Failed to update pre-inspection status', 'error')
     }
   }
 
@@ -2131,6 +2155,20 @@ ${mileage}`
                 </div>
               </div>
             )}
+            
+            {/* Pre-inspection Checkbox */}
+            <div className="mt-3 pt-3 border-t border-gray-200">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={(transaction as any).preInspection || false}
+                  onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
+                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                  title="Pre-inspection completed"
+                />
+                <span className="text-xs text-gray-700 font-medium">Pre-Inspection</span>
+              </label>
+            </div>
             
             {/* Archive and Delete Buttons */}
             {isAdmin && (
