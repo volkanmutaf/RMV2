@@ -39,6 +39,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editingRef, setEditingRef] = useState<string | null>(null)
+  const [editingContact, setEditingContact] = useState<string | null>(null)
   const [showCopyNotification, setShowCopyNotification] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -50,10 +51,12 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [noteValues, setNoteValues] = useState<{[key: string]: string}>({})
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
+  const [contactValues, setContactValues] = useState<{[key: string]: string}>({})
   const [localNotes, setLocalNotes] = useState<{[key: string]: string}>({})
   const [localRefs, setLocalRefs] = useState<{[key: string]: string}>({})
   const [localPlates, setLocalPlates] = useState<{[key: string]: string}>({})
   const [localStatuses, setLocalStatuses] = useState<{[key: string]: string}>({})
+  const [localContacts, setLocalContacts] = useState<{[key: string]: string}>({})
   const [isClient, setIsClient] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showTestModal, setShowTestModal] = useState(false)
@@ -119,21 +122,24 @@ export default function VehicleTable({ transactions: initialTransactions, curren
 
   useEffect(() => {
     setIsClient(true)
-    // Initialize local notes, refs, plates, and statuses with transaction data
+    // Initialize local notes, refs, plates, contacts, and statuses with transaction data
     const initialNotes: {[key: string]: string} = {}
     const initialRefs: {[key: string]: string} = {}
     const initialPlates: {[key: string]: string} = {}
     const initialStatuses: {[key: string]: string} = {}
+    const initialContacts: {[key: string]: string} = {}
     transactions.forEach(transaction => {
       initialNotes[transaction.id] = transaction.note || ''
       initialRefs[transaction.id] = transaction.ref || ''
       initialPlates[transaction.id] = transaction.plate || ''
       initialStatuses[transaction.id] = transaction.status || ''
+      initialContacts[transaction.id] = transaction.customer.contact || ''
     })
     setLocalNotes(initialNotes)
     setLocalRefs(initialRefs)
     setLocalPlates(initialPlates)
     setLocalStatuses(initialStatuses)
+    setLocalContacts(initialContacts)
   }, [transactions])
 
   const statusOptions = [
@@ -1052,17 +1058,86 @@ ${mileage}`
                     </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    {transaction.customer.contact ? (
-                      <a 
-                        href={`tel:${transaction.customer.contact}`}
-                        className="text-xs text-gray-600 font-mono cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200"
-                        title="Click to call"
-                      >
-                        {transaction.customer.contact}
-                      </a>
+                    {isAdmin && editingContact === transaction.id ? (
+                      <input
+                        type="text"
+                        className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 font-mono"
+                        placeholder="Enter contact..."
+                        value={contactValues[transaction.id] !== undefined ? contactValues[transaction.id] : (localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || '')}
+                        onChange={(e) => {
+                          setContactValues(prev => ({
+                            ...prev,
+                            [transaction.id]: e.target.value
+                          }))
+                        }}
+                        autoFocus
+                        onBlur={(e) => {
+                          const newValue = e.target.value.trim()
+                          const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                          
+                          // Only save if value actually changed
+                          if (newValue !== originalValue) {
+                            handleContactChange(transaction.id, newValue)
+                          }
+                          setEditingContact(null)
+                          setContactValues(prev => {
+                            const updated = {...prev}
+                            delete updated[transaction.id]
+                            return updated
+                          })
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const newValue = e.currentTarget.value.trim()
+                            const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                            
+                            // Only save if value actually changed
+                            if (newValue !== originalValue) {
+                              handleContactChange(transaction.id, newValue)
+                            }
+                            setEditingContact(null)
+                            setContactValues(prev => {
+                              const updated = {...prev}
+                              delete updated[transaction.id]
+                              return updated
+                            })
+                          } else if (e.key === 'Escape') {
+                            setEditingContact(null)
+                            setContactValues(prev => {
+                              const updated = {...prev}
+                              delete updated[transaction.id]
+                              return updated
+                            })
+                          }
+                        }}
+                      />
                     ) : (
-                      <div className="text-xs text-gray-600 font-mono">
-                        -
+                      <div 
+                        className="relative inline-flex items-center px-2 py-1 rounded text-xs font-medium cursor-pointer hover:bg-gray-50 transition-colors group border border-gray-300 bg-white text-gray-900 min-w-[100px] h-8"
+                        onClick={() => {
+                          if (isAdmin) {
+                            setContactValues(prev => ({
+                              ...prev,
+                              [transaction.id]: localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || ''
+                            }))
+                            setEditingContact(transaction.id)
+                          }
+                        }}
+                      >
+                        {(localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact) || '-'}
+                        {isAdmin && (localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact) && (
+                          <button
+                            className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              handleContactChange(transaction.id, '')
+                            }}
+                            title="Clear contact"
+                          >
+                            ×
+                          </button>
+                        )}
                       </div>
                     )}
                   </td>
@@ -1655,17 +1730,76 @@ ${mileage}`
               </div>
               <div>
                 <span className="text-gray-500">Contact:</span>
-                {transaction.customer.contact ? (
-                  <a 
-                    href={`tel:${transaction.customer.contact}`}
-                    className="font-mono text-gray-600 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors touch-manipulation"
-                    title="Tap to call"
-                  >
-                    {transaction.customer.contact}
-                  </a>
+                {isAdmin && editingContact === transaction.id ? (
+                  <input
+                    type="text"
+                    className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 font-mono"
+                    placeholder="Enter contact..."
+                    value={contactValues[transaction.id] !== undefined ? contactValues[transaction.id] : (localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || '')}
+                    onChange={(e) => {
+                      setContactValues(prev => ({
+                        ...prev,
+                        [transaction.id]: e.target.value
+                      }))
+                    }}
+                    autoFocus
+                    onBlur={(e) => {
+                      const newValue = e.target.value.trim()
+                      const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                      
+                      // Only save if value actually changed
+                      if (newValue !== originalValue) {
+                        handleContactChange(transaction.id, newValue)
+                      }
+                      setEditingContact(null)
+                      setContactValues(prev => {
+                        const updated = {...prev}
+                        delete updated[transaction.id]
+                        return updated
+                      })
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        const newValue = e.currentTarget.value.trim()
+                        const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                        
+                        // Only save if value actually changed
+                        if (newValue !== originalValue) {
+                          handleContactChange(transaction.id, newValue)
+                        }
+                        setEditingContact(null)
+                        setContactValues(prev => {
+                          const updated = {...prev}
+                          delete updated[transaction.id]
+                          return updated
+                        })
+                      } else if (e.key === 'Escape') {
+                        setEditingContact(null)
+                        setContactValues(prev => {
+                          const updated = {...prev}
+                          delete updated[transaction.id]
+                          return updated
+                        })
+                      }
+                    }}
+                  />
                 ) : (
-                  <div className="font-mono text-gray-600">
-                    -
+                  <div 
+                    className="font-mono text-gray-600 cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-colors touch-manipulation"
+                    onClick={() => {
+                      if (isAdmin) {
+                        setContactValues(prev => ({
+                          ...prev,
+                          [transaction.id]: localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || ''
+                        }))
+                        setEditingContact(transaction.id)
+                      } else if (transaction.customer.contact) {
+                        window.location.href = `tel:${transaction.customer.contact}`
+                      }
+                    }}
+                    title={isAdmin ? "Tap to edit" : "Tap to call"}
+                  >
+                    {(localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact) || '-'}
                   </div>
                 )}
               </div>
@@ -2161,17 +2295,86 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {transaction.customer.contact ? (
-                    <a 
-                      href={`tel:${transaction.customer.contact}`}
-                      className="text-xs text-gray-600 font-mono cursor-pointer hover:text-blue-600 hover:bg-blue-50 px-2 py-1 rounded transition-all duration-200"
-                      title="Click to call"
-                    >
-                      {transaction.customer.contact}
-                    </a>
+                  {isAdmin && editingContact === transaction.id ? (
+                    <input
+                      type="text"
+                      className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-32 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900 font-mono"
+                      placeholder="Enter contact..."
+                      value={contactValues[transaction.id] !== undefined ? contactValues[transaction.id] : (localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || '')}
+                      onChange={(e) => {
+                        setContactValues(prev => ({
+                          ...prev,
+                          [transaction.id]: e.target.value
+                        }))
+                      }}
+                      autoFocus
+                      onBlur={(e) => {
+                        const newValue = e.target.value.trim()
+                        const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                        
+                        // Only save if value actually changed
+                        if (newValue !== originalValue) {
+                          handleContactChange(transaction.id, newValue)
+                        }
+                        setEditingContact(null)
+                        setContactValues(prev => {
+                          const updated = {...prev}
+                          delete updated[transaction.id]
+                          return updated
+                        })
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newValue = e.currentTarget.value.trim()
+                          const originalValue = localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : (transaction.customer.contact || '')
+                          
+                          // Only save if value actually changed
+                          if (newValue !== originalValue) {
+                            handleContactChange(transaction.id, newValue)
+                          }
+                          setEditingContact(null)
+                          setContactValues(prev => {
+                            const updated = {...prev}
+                            delete updated[transaction.id]
+                            return updated
+                          })
+                        } else if (e.key === 'Escape') {
+                          setEditingContact(null)
+                          setContactValues(prev => {
+                            const updated = {...prev}
+                            delete updated[transaction.id]
+                            return updated
+                          })
+                        }
+                      }}
+                    />
                   ) : (
-                    <div className="text-xs text-gray-600 font-mono">
-                      -
+                    <div 
+                      className="relative inline-flex items-center px-2 py-1 rounded text-xs font-medium cursor-pointer hover:bg-gray-50 transition-colors group border border-gray-300 bg-white text-gray-900 min-w-[100px] h-8"
+                      onClick={() => {
+                        if (isAdmin) {
+                          setContactValues(prev => ({
+                            ...prev,
+                            [transaction.id]: localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact || ''
+                          }))
+                          setEditingContact(transaction.id)
+                        }
+                      }}
+                    >
+                      {(localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact) || '-'}
+                      {isAdmin && (localContacts[transaction.id] !== undefined ? localContacts[transaction.id] : transaction.customer.contact) && (
+                        <button
+                          className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                          onClick={(e) => {
+                            e.preventDefault()
+                            e.stopPropagation()
+                            handleContactChange(transaction.id, '')
+                          }}
+                          title="Clear contact"
+                        >
+                          ×
+                        </button>
+                      )}
                     </div>
                   )}
                 </td>

@@ -48,6 +48,22 @@ export async function PUT(
       note: data.note,
       ref: data.ref
     }
+    
+    // If contact is being changed, update customer
+    if (data.contact !== undefined) {
+      // Get transaction to find customerId
+      const transaction = await prisma.transaction.findUnique({
+        where: { id },
+        select: { customerId: true }
+      })
+      
+      if (transaction) {
+        await prisma.customer.update({
+          where: { id: transaction.customerId },
+          data: { contact: data.contact }
+        })
+      }
+    }
 
     // If status is being changed, update lastUpdatedBy and lastUpdatedAt
     if (data.status !== undefined) {
