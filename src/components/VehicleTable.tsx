@@ -30,7 +30,6 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
   const [isAdmin, setIsAdmin] = useState(false) // Start as non-admin
   const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN or EDITOR)
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
-  const [editingTax, setEditingTax] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editingRef, setEditingRef] = useState<string | null>(null)
   const [showCopyNotification, setShowCopyNotification] = useState(false)
@@ -44,12 +43,10 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
   const [noteValues, setNoteValues] = useState<{[key: string]: string}>({})
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
-  const [taxValues, setTaxValues] = useState<{[key: string]: string}>({})
   const [localNotes, setLocalNotes] = useState<{[key: string]: string}>({})
   const [localRefs, setLocalRefs] = useState<{[key: string]: string}>({})
   const [localPlates, setLocalPlates] = useState<{[key: string]: string}>({})
   const [localStatuses, setLocalStatuses] = useState<{[key: string]: string}>({})
-  const [localTaxes, setLocalTaxes] = useState<{[key: string]: string}>({})
   const [isClient, setIsClient] = useState(false)
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showTestModal, setShowTestModal] = useState(false)
@@ -112,24 +109,21 @@ export default function VehicleTable({ transactions, currentUser }: VehicleTable
 
   useEffect(() => {
     setIsClient(true)
-    // Initialize local notes, refs, plates, payments, statuses, and taxes with transaction data
+    // Initialize local notes, refs, plates, and statuses with transaction data
     const initialNotes: {[key: string]: string} = {}
     const initialRefs: {[key: string]: string} = {}
     const initialPlates: {[key: string]: string} = {}
     const initialStatuses: {[key: string]: string} = {}
-    const initialTaxes: {[key: string]: string} = {}
     transactions.forEach(transaction => {
       initialNotes[transaction.id] = transaction.note || ''
       initialRefs[transaction.id] = transaction.ref || ''
       initialPlates[transaction.id] = transaction.plate || ''
       initialStatuses[transaction.id] = transaction.status || ''
-      initialTaxes[transaction.id] = transaction.tax?.toString() || ''
     })
     setLocalNotes(initialNotes)
     setLocalRefs(initialRefs)
     setLocalPlates(initialPlates)
     setLocalStatuses(initialStatuses)
-    setLocalTaxes(initialTaxes)
   }, [transactions])
 
   const statusOptions = [
