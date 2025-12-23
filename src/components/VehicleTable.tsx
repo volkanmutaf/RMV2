@@ -145,7 +145,8 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     { value: 'RE_INSPECTION', label: 'Re-inspection' },
     { value: 'READY_FOR_PICKUP', label: 'Ready for pick up' },
     { value: 'TITLE_PENDING', label: 'Title Pending' },
-    { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' }
+    { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
+    { value: 'TITLE_REQUESTED', label: 'Title Requested' }
   ]
 
   const copyToClipboard = async (text: string) => {
@@ -566,6 +567,8 @@ ${mileage}`
         return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300 shadow-sm'
       case 'AWAITING_STAMP':
         return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300 shadow-sm'
+      case 'TITLE_REQUESTED':
+        return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-sm'
       default:
         return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-sm'
     }
@@ -590,6 +593,8 @@ ${mileage}`
         return 'bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-400 shadow-sm'
       case 'AWAITING_STAMP':
         return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-sm'
+      case 'TITLE_REQUESTED':
+        return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-400 shadow-sm'
       default:
         return ''
     }
@@ -1058,7 +1063,11 @@ ${mileage}`
                     {isAdmin && (
                       <button
                         onClick={() => confirmArchive(transaction.id)}
-                        className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+                        className={`${
+                          (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                            ? 'bg-green-500 hover:bg-green-600'
+                            : 'bg-orange-500 hover:bg-orange-600'
+                        } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
                         title="Add to archive"
                       >
                         📁
@@ -1725,7 +1734,11 @@ ${mileage}`
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <button
                   onClick={() => confirmArchive(transaction.id)}
-                  className="w-full bg-orange-500 hover:bg-orange-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors cursor-pointer"
+                  className={`w-full ${
+                    (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                      ? 'bg-green-500 hover:bg-green-600'
+                      : 'bg-orange-500 hover:bg-orange-600'
+                  } text-white px-3 py-2 rounded text-sm font-medium transition-colors cursor-pointer`}
                   title="Add to archive"
                 >
                   📁 Add to Archive
@@ -1930,6 +1943,7 @@ ${mileage}`
                             if (status === 'READY_FOR_PICKUP') return '#ecfdf5'
                             if (status === 'TITLE_PENDING') return '#fef2f2'
                             if (status === 'AWAITING_STAMP') return '#fff7ed'
+                            if (status === 'TITLE_REQUESTED') return '#f0fdf4'
                             return '#f9fafb'
                           })(),
                           color: (() => {
@@ -1942,6 +1956,7 @@ ${mileage}`
                             if (status === 'READY_FOR_PICKUP') return '#047857'
                             if (status === 'TITLE_PENDING') return '#991b1b'
                             if (status === 'AWAITING_STAMP') return '#c2410c'
+                            if (status === 'TITLE_REQUESTED') return '#166534'
                             return '#374151'
                           })()
                         }}
@@ -2239,7 +2254,11 @@ ${mileage}`
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => confirmArchive(transaction.id)}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+                      className={`${
+                        (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                          ? 'bg-green-500 hover:bg-green-600'
+                          : 'bg-orange-500 hover:bg-orange-600'
+                      } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
                       title="Add to archive"
                     >
                       📁
