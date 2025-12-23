@@ -2655,10 +2655,10 @@ ${mileage}`
                {canEdit && !(transaction as any).isUrgent && (
                  <button
                    onClick={() => confirmUrgent(transaction.id)}
-                   className="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded transition-colors cursor-pointer"
+                   className="text-xs font-bold bg-yellow-500 hover:bg-yellow-600 text-white w-6 h-6 rounded transition-colors cursor-pointer flex items-center justify-center"
                    title="Mark as urgent"
                  >
-                   Urgent
+                   U
                  </button>
                )}
              </div>
