@@ -4,22 +4,13 @@
 -- ============================================
 -- 1. Users Table Updates
 -- ============================================
--- First, copy email to username if email column exists (using dynamic SQL)
-DO $$ 
-BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'email'
-    ) THEN
-        -- Update username from email before dropping email column (using EXECUTE for dynamic SQL)
-        EXECUTE 'UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL';
-    END IF;
-END $$;
-
 -- Add password and username to users table
-ALTER TABLE "users" DROP COLUMN IF EXISTS "email";
+-- Note: If you have existing users, you'll need to manually set their username via the admin panel
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "username" TEXT;
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "password" TEXT;
+
+-- Drop email column if it exists (safe to do after username is added)
+ALTER TABLE "users" DROP COLUMN IF EXISTS "email";
 
 -- Create unique index for username
 CREATE UNIQUE INDEX IF NOT EXISTS "users_username_key" ON "users"("username");
