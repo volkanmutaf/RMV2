@@ -43,8 +43,14 @@ export default async function Home() {
       }
     })
     
-    // Filter out archived transactions
-    transactions = allTransactions.filter(t => !t.archived)
+    // Filter out archived transactions (only show where archived is false or null/undefined)
+    transactions = allTransactions.filter(t => t.archived !== true)
+    
+    console.log('Page - All transactions:', allTransactions.length)
+    console.log('Page - Non-archived transactions:', transactions.length)
+    if (allTransactions.length > 0) {
+      console.log('Page - First transaction archived:', allTransactions[0].archived)
+    }
   } catch (error) {
     console.error('Database connection error:', error)
     // Return empty array if database is not available

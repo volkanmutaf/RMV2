@@ -21,6 +21,12 @@ interface VehicleTableProps {
 }
 
 export default function VehicleTable({ transactions, currentUser }: VehicleTableProps) {
+  // Debug: Log transactions
+  useEffect(() => {
+    console.log('VehicleTable - transactions received:', transactions.length)
+    console.log('VehicleTable - transactions:', transactions)
+  }, [transactions])
+
   const [isAdmin, setIsAdmin] = useState(false) // Start as non-admin
   const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN or EDITOR)
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
@@ -862,8 +868,8 @@ ${mileage}`
 
   // Filter and search functionality
   const filteredTransactions = transactions.filter(transaction => {
-    // First, exclude archived transactions
-    if (transaction.archived) {
+    // First, exclude archived transactions (only show where archived is false or null/undefined)
+    if (transaction.archived === true) {
       return false
     }
     
@@ -922,6 +928,21 @@ ${mileage}`
       return aValue < bValue ? 1 : -1
     }
   })
+
+  // Debug: Log transactions
+  useEffect(() => {
+    console.log('VehicleTable Debug:')
+    console.log('- transactions prop:', transactions.length)
+    console.log('- filteredTransactions:', filteredTransactions.length)
+    console.log('- sortedTransactions:', sortedTransactions.length)
+    console.log('- searchTerm:', searchTerm)
+    console.log('- filterStatus:', filterStatus)
+    console.log('- filterPayment:', filterPayment)
+    if (transactions.length > 0) {
+      console.log('- First transaction:', transactions[0])
+      console.log('- First transaction archived:', transactions[0].archived)
+    }
+  }, [transactions, filteredTransactions, sortedTransactions, searchTerm, filterStatus, filterPayment])
 
   const getStatusColor = (status: VehicleStatus | null) => {
     switch (status) {
