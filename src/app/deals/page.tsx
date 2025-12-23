@@ -8,6 +8,7 @@ interface Deal {
   dealNumber: string
   type: 'DEPOSIT' | 'DEAL'
   amount: number | null
+  readByAdmin: boolean
   createdBy: {
     id: string
     username: string
@@ -37,6 +38,7 @@ export default function DealsPage() {
   const [loading, setLoading] = useState(true)
   const [editingAmount, setEditingAmount] = useState<{[key: string]: string}>({})
   const [searchTerm, setSearchTerm] = useState('')
+  const [unreadCount, setUnreadCount] = useState(0)
   
   useEffect(() => {
     // Check authentication
@@ -54,6 +56,9 @@ export default function DealsPage() {
           .then(res => res.json())
           .then(data => {
             setDeals(data)
+            // Count unread deals before they are marked as read
+            const unread = data.filter((deal: Deal) => !deal.readByAdmin).length
+            setUnreadCount(unread)
             setLoading(false)
           })
           .catch(err => {
@@ -135,7 +140,14 @@ export default function DealsPage() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h1 className="text-3xl font-bold text-gray-900">Deals Management</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-gray-900">Deals Management</h1>
+              {unreadCount > 0 && (
+                <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
             <button
               onClick={() => router.push('/')}
               className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"

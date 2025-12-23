@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { cookies } from 'next/headers'
-import { UserSession, canEdit } from '@/lib/auth'
+import { UserSession } from '@/lib/auth'
 
 async function getCurrentUser(): Promise<UserSession | null> {
   try {
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser()
     
@@ -122,6 +122,16 @@ export async function GET(request: NextRequest) {
           model: matchingTransaction.vehicle.model,
           vin: matchingTransaction.vehicle.vin,
         } : null
+      }
+    })
+    
+    // Mark all deals as read when admin views the page
+    await prisma.deal.updateMany({
+      where: {
+        readByAdmin: false
+      },
+      data: {
+        readByAdmin: true
       }
     })
     

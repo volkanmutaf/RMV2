@@ -50,6 +50,8 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [transactionToArchive, setTransactionToArchive] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
+  const [showUrgentConfirm, setShowUrgentConfirm] = useState(false)
+  const [transactionToUrgent, setTransactionToUrgent] = useState<string | null>(null)
   const [noteValues, setNoteValues] = useState<{[key: string]: string}>({})
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
@@ -917,6 +919,40 @@ ${mileage}`
     }
   }
 
+  const confirmUrgent = (transactionId: string) => {
+    setTransactionToUrgent(transactionId)
+    setShowUrgentConfirm(true)
+  }
+
+  const executeUrgent = async () => {
+    if (!transactionToUrgent) return
+    
+    try {
+      const response = await fetch(`/api/transactions/${transactionToUrgent}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isUrgent: true }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to mark as urgent')
+      }
+      
+      const updatedTransaction = await response.json()
+      setTransactions(prev => prev.map(t => t.id === transactionToUrgent ? updatedTransaction : t))
+      
+      showNotificationMessage('Transaction marked as urgent!', 'success')
+      setShowUrgentConfirm(false)
+      setTransactionToUrgent(null)
+    } catch (error) {
+      console.error('Failed to mark as urgent:', error)
+      showNotificationMessage('Failed to mark as urgent', 'error')
+      setShowUrgentConfirm(false)
+      setTransactionToUrgent(null)
+    }
+  }
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -2608,10 +2644,23 @@ ${mileage}`
                       </>
                     )}
            {(transaction.status === 'TITLE_PENDING' || localStatuses[transaction.id] === 'TITLE_PENDING') && (
-             <div 
-               className="w-3 h-3 bg-red-500 rounded-full"
-               title="Title Pending - Requires Attention"
-             >
+             <div className="flex items-center gap-2">
+               <div 
+                 className={`w-3 h-3 rounded-full ${
+                   (transaction as any).isUrgent ? 'bg-yellow-500' : 'bg-red-500'
+                 }`}
+                 title={(transaction as any).isUrgent ? "Title Pending - Urgent" : "Title Pending - Requires Attention"}
+               >
+               </div>
+               {canEdit && !(transaction as any).isUrgent && (
+                 <button
+                   onClick={() => confirmUrgent(transaction.id)}
+                   className="text-xs bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded transition-colors cursor-pointer"
+                   title="Mark as urgent"
+                 >
+                   Urgent
+                 </button>
+               )}
              </div>
            )}
                   </div>
@@ -2674,6 +2723,38 @@ ${mileage}`
                   className="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
                 >
                   Add to Archive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Urgent Confirmation Modal */}
+      {showUrgentConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="text-4xl mb-4 text-yellow-500">⚠️</div>
+              <h3 className="text-lg font-semibold mb-2 text-yellow-600">Mark as Urgent</h3>
+              <p className="text-gray-700 mb-4">
+                Are you sure this title is urgent? The status dot will turn yellow to indicate urgency.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowUrgentConfirm(false)
+                    setTransactionToUrgent(null)
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeUrgent}
+                  className="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Mark as Urgent
                 </button>
               </div>
             </div>

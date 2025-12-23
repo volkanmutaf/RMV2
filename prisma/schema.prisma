@@ -68,6 +68,7 @@ model Transaction {
   archivedAt DateTime?
   lastUpdatedBy String?   // Username of user who last updated status
   lastUpdatedAt DateTime? // When status was last updated
+  isUrgent  Boolean       @default(false) // Mark TITLE_PENDING as urgent
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   
@@ -127,6 +128,7 @@ model Deal {
   type        DealType
   amount      Float?    // Admin can edit this
   createdById String
+  readByAdmin Boolean   @default(false) // Track if admin has seen this deal
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   

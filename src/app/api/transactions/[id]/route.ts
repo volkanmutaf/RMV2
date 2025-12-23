@@ -80,6 +80,11 @@ export async function PUT(
       updateData.lastUpdatedAt = new Date()
     }
     
+    // If isUrgent is being changed
+    if (data.isUrgent !== undefined) {
+      updateData.isUrgent = data.isUrgent
+    }
+    
     // Update transaction fields
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
