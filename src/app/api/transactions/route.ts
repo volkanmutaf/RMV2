@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/admin'
+import { requireAdmin, handleAdminError } from '@/lib/admin'
 
 export async function GET() {
   try {
@@ -33,7 +33,16 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Admin kontrolü
-    requireAdmin(request)
+    try {
+      requireAdmin(request)
+    } catch (adminError) {
+      console.error('Admin check failed:', adminError)
+      const adminErrorResponse = handleAdminError(adminError)
+      if (adminErrorResponse) {
+        return NextResponse.json({ error: adminErrorResponse.message }, { status: adminErrorResponse.status })
+      }
+      throw adminError
+    }
     
     const data = await request.json()
     
@@ -80,6 +89,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(transaction)
   } catch (error) {
     console.error('Error creating transaction:', error)
-    return NextResponse.json({ error: 'Failed to create transaction' }, { status: 500 })
+    
+    // Admin error kontrolü
+    const adminError = handleAdminError(error)
+    if (adminError) {
+      return NextResponse.json({ error: adminError.message }, { status: adminError.status })
+    }
+    
+    return NextResponse.json({ 
+      error: 'Failed to create transaction', 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }
