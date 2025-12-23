@@ -1,4 +1,5 @@
 import { PrismaClient } from '../src/generated/prisma'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
@@ -17,21 +18,24 @@ async function main() {
   const users = await Promise.all([
     prisma.user.create({
       data: {
-        email: 'admin@huggardewing.com',
+        username: 'admin',
+        password: await bcrypt.hash('admin123', 10),
         name: 'System Administrator',
         role: 'ADMIN'
       }
     }),
     prisma.user.create({
       data: {
-        email: 'manager@huggardewing.com',
+        username: 'manager',
+        password: await bcrypt.hash('manager123', 10),
         name: 'Operations Manager',
         role: 'ADMIN'
       }
     }),
     prisma.user.create({
       data: {
-        email: 'staff@huggardewing.com',
+        username: 'staff',
+        password: await bcrypt.hash('staff123', 10),
         name: 'Registration Staff',
         role: 'VIEWER'
       }
@@ -101,11 +105,11 @@ async function main() {
     { vehicle: 1, customer: 1, date: '2024-01-16', payment: 'UNPAID', tax: 98.75, status: 'PICKED_UP', plate: 'DEF-456', note: 'Customer picked up documents', ref: 'REF-2024-002' },
     { vehicle: 2, customer: 2, date: '2024-01-17', payment: 'PAID', tax: 150.00, status: 'INSPECTED', plate: 'GHI-789', note: 'Vehicle inspection completed', ref: 'REF-2024-003' },
     { vehicle: 3, customer: 3, date: '2024-01-18', payment: 'UNPAID', tax: 87.25, status: 'TRANSFER_PLATE', plate: 'JKL-012', note: 'Plate transfer in progress', ref: 'REF-2024-004' },
-    { vehicle: 4, customer: 4, date: '2024-01-19', payment: 'PAID', tax: 200.00, status: 'TAUNTON_RMV', plate: 'MNO-345', note: 'Processing at Taunton RMV', ref: 'REF-2024-005' },
+    { vehicle: 4, customer: 4, date: '2024-01-19', payment: 'PAID', tax: 200.00, status: 'RE_INSPECTION', plate: 'MNO-345', note: 'Processing', ref: 'REF-2024-005' },
     
     // Mid-term transactions (30-60 days ago)
     { vehicle: 5, customer: 5, date: '2023-12-20', payment: 'PAID', tax: 175.50, status: 'REGISTERED', plate: 'PQR-678', note: 'Luxury vehicle registration', ref: 'REF-2023-120' },
-    { vehicle: 6, customer: 6, date: '2023-12-22', payment: 'UNPAID', tax: 142.75, status: 'BROCKTON_RMV', plate: 'STU-901', note: 'Processing at Brockton RMV', ref: 'REF-2023-122' },
+    { vehicle: 6, customer: 6, date: '2023-12-22', payment: 'UNPAID', tax: 142.75, status: 'RE_INSPECTION', plate: 'STU-901', note: 'Processing', ref: 'REF-2023-122' },
     { vehicle: 7, customer: 7, date: '2023-12-25', payment: 'PAID', tax: 165.00, status: 'READY_FOR_PICKUP', plate: 'VWX-234', note: 'Ready for customer pickup', ref: 'REF-2023-125' },
     { vehicle: 8, customer: 8, date: '2023-12-28', payment: 'UNPAID', tax: 95.50, status: 'RE_INSPECTION', plate: 'YZA-567', note: 'Requires re-inspection', ref: 'REF-2023-128' },
     { vehicle: 9, customer: 9, date: '2023-12-30', payment: 'PAID', tax: 110.25, status: 'INSPECTED', plate: 'BCD-890', note: 'Inspection passed', ref: 'REF-2023-130' },
@@ -119,8 +123,8 @@ async function main() {
     
     // Various status scenarios
     { vehicle: 15, customer: 15, date: '2024-01-10', payment: 'PAID', tax: 140.00, status: 'TRANSFER_PLATE', plate: 'TUV-678', note: 'Plate transfer initiated', ref: 'REF-2024-010' },
-    { vehicle: 16, customer: 16, date: '2024-01-12', payment: 'UNPAID', tax: 115.75, status: 'TAUNTON_RMV', plate: 'WXY-901', note: 'At Taunton RMV', ref: 'REF-2024-012' },
-    { vehicle: 17, customer: 17, date: '2024-01-14', payment: 'PAID', tax: 160.50, status: 'BROCKTON_RMV', plate: 'ZAB-234', note: 'At Brockton RMV', ref: 'REF-2024-014' },
+    { vehicle: 16, customer: 16, date: '2024-01-12', payment: 'UNPAID', tax: 115.75, status: 'RE_INSPECTION', plate: 'WXY-901', note: 'Processing', ref: 'REF-2024-012' },
+    { vehicle: 17, customer: 17, date: '2024-01-14', payment: 'PAID', tax: 160.50, status: 'RE_INSPECTION', plate: 'ZAB-234', note: 'Processing', ref: 'REF-2024-014' },
     { vehicle: 18, customer: 18, date: '2024-01-16', payment: 'UNPAID', tax: 90.00, status: 'RE_INSPECTION', plate: 'CDE-567', note: 'Failed inspection, needs re-inspection', ref: 'REF-2024-016' },
     { vehicle: 19, customer: 19, date: '2024-01-18', payment: 'PAID', tax: 195.25, status: 'READY_FOR_PICKUP', plate: 'FGH-890', note: 'All documents ready', ref: 'REF-2024-018' },
     
