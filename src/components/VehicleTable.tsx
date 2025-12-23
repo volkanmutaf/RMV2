@@ -2707,7 +2707,19 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {/* Pre-inspection Checkbox */}
+                    <label className="flex items-center gap-1 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={(transaction as any).preInspection || false}
+                        onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+                        title="Pre-inspection completed"
+                      />
+                      <span className="text-xs text-gray-600">Pre-Insp</span>
+                    </label>
+                    
                     {isAdmin && (
                       <>
                     <button
