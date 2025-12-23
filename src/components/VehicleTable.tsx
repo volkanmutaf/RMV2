@@ -898,11 +898,11 @@ ${mileage}`
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Vehicle</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">VIN</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Status</th>
-                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Last Updated By</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Plate</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Note</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Contact</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Ref</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Last Updated By</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
@@ -1002,28 +1002,6 @@ ${mileage}`
                     )}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    {transaction.lastUpdatedBy ? (
-                      <div className="inline-flex items-center px-2 py-1 rounded text-xs font-medium border border-gray-300 bg-white text-gray-900">
-                        <div>
-                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                          {(transaction as any).lastUpdatedAt && (
-                            <div className="text-gray-500 text-[10px] mt-0.5">
-                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <span className="text-xs text-gray-400">-</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
                     <div className="text-xs font-semibold text-gray-900">
                       {transaction.plate || '-'}
                     </div>
@@ -1052,6 +1030,26 @@ ${mileage}`
                     <div className="text-xs font-semibold text-gray-900">
                       {transaction.ref || '-'}
                     </div>
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    {transaction.lastUpdatedBy ? (
+                      <div className="text-xs text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">
+                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                        {(transaction as any).lastUpdatedAt && (
+                          <div className="text-gray-500 text-[10px]">
+                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-xs text-gray-400">-</span>
+                    )}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && (
@@ -1586,22 +1584,6 @@ ${mileage}`
                         : '-'
                       }
                     </div>
-                    {transaction.lastUpdatedBy && (
-                      <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                        {(transaction as any).lastUpdatedAt && (
-                          <div className="text-gray-500 text-[10px]">
-                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -1813,6 +1795,9 @@ ${mileage}`
                 🔗 Ref
               </th>
               <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">
+                👤 Last Updated By
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -1997,22 +1982,6 @@ ${mileage}`
                           : '-'
                         }
                       </span>
-                      {transaction.lastUpdatedBy && (
-                        <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
-                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
-                          {(transaction as any).lastUpdatedAt && (
-                            <div className="text-gray-500 text-[10px]">
-                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </div>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
                 </td>
@@ -2264,6 +2233,26 @@ ${mileage}`
                         </button>
                       )}
                     </div>
+                  )}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
+                  {transaction.lastUpdatedBy ? (
+                    <div className="text-xs text-gray-600 bg-white px-2 py-1 rounded border border-gray-200">
+                      <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                      {(transaction as any).lastUpdatedAt && (
+                        <div className="text-gray-500 text-[10px]">
+                          🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-xs text-gray-400">-</span>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
