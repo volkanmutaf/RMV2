@@ -1530,24 +1530,6 @@ ${mileage}`
               </div>
               <div className="text-right">
                 <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
-                {isAdmin ? (
-                  <select 
-                    className="text-xs font-medium border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 mt-1 touch-manipulation bg-white text-gray-900"
-                    value={localPayments[transaction.id] || transaction.payment || 'UNPAID'}
-                    onChange={(e) => {
-                      handlePaymentChange(transaction.id, e.target.value)
-                    }}
-                  >
-                    <option value="PAID" className="text-gray-900 bg-white">💰 Paid</option>
-                    <option value="UNPAID" className="text-gray-900 bg-white">⏳ Unpaid</option>
-                  </select>
-                ) : (
-                  <div className={`text-xs font-bold px-3 py-2 rounded-lg mt-1 ${
-                    getPaymentColorClasses(localStatuses[transaction.id] || transaction.status || '')
-                  }`}>
-                    {transaction.payment === 'PAID' ? '💰 Paid' : '⏳ Unpaid'}
-                  </div>
-                )}
               </div>
             </div>
             
