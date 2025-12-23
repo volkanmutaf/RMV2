@@ -6,7 +6,6 @@ import { Transaction, Vehicle, Customer, VehicleStatus } from '@/generated/prism
 interface TransactionWithRelations extends Transaction {
   vehicle: Vehicle
   customer: Customer
-  lastUpdatedBy?: string | null
 }
 
 interface UserSession {
