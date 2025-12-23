@@ -67,6 +67,7 @@ model Transaction {
   archived  Boolean       @default(false)
   archivedAt DateTime?
   lastUpdatedBy String?   // Username of user who last updated status
+  lastUpdatedAt DateTime? // When status was last updated
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   

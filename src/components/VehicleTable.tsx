@@ -1646,9 +1646,14 @@ ${mileage}`
                       }
                     </div>
                     {transaction.lastUpdatedBy && (
-                      <span className="text-xs text-gray-500 mt-1">
-                        Last updated by: {transaction.lastUpdatedBy}
-                      </span>
+                      <div className="text-xs text-gray-500 mt-1">
+                        <div>Last updated by: {transaction.lastUpdatedBy}</div>
+                        {(transaction as any).lastUpdatedAt && (
+                          <div className="text-xs text-gray-400">
+                            {new Date((transaction as any).lastUpdatedAt).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
@@ -2020,9 +2025,14 @@ ${mileage}`
                         }
                       </span>
                       {transaction.lastUpdatedBy && (
-                        <span className="text-xs text-gray-500 mt-1">
-                          Last updated by: {transaction.lastUpdatedBy}
-                        </span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          <div>Last updated by: {transaction.lastUpdatedBy}</div>
+                          {(transaction as any).lastUpdatedAt && (
+                            <div className="text-xs text-gray-400">
+                              {new Date((transaction as any).lastUpdatedAt).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

@@ -25,6 +25,13 @@ export default function UsersPage() {
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [editFormData, setEditFormData] = useState({
+    username: '',
+    password: '',
+    name: '',
+    role: 'VIEWER' as 'ADMIN' | 'EDITOR' | 'VIEWER'
+  })
 
   useEffect(() => {
     fetchCurrentUser()
@@ -101,6 +108,84 @@ export default function UsersPage() {
     router.push('/login')
   }
 
+  const handleEdit = (user: User) => {
+    setEditingUser(user)
+    setEditFormData({
+      username: user.username,
+      password: '', // Don't show password
+      name: user.name,
+      role: user.role
+    })
+  }
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError('')
+    setSuccess('')
+
+    if (!editingUser) return
+
+    try {
+      const response = await fetch(`/api/users/${editingUser.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: editFormData.username,
+          password: editFormData.password || undefined, // Only send if provided
+          name: editFormData.name,
+          role: editFormData.role
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to update user')
+        return
+      }
+
+      setSuccess('User updated successfully!')
+      setEditingUser(null)
+      setEditFormData({ username: '', password: '', name: '', role: 'VIEWER' })
+      fetchUsers()
+    } catch (error) {
+      console.error('Error updating user:', error)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
+  const handleResetPassword = async (userId: string) => {
+    if (!confirm('Are you sure you want to reset this user\'s password? Default password will be "password123".')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password: 'password123'
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        setError(data.error || 'Failed to reset password')
+        return
+      }
+
+      setSuccess('Password reset successfully! New password: password123')
+      fetchUsers()
+    } catch (error) {
+      console.error('Error resetting password:', error)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
@@ -171,7 +256,7 @@ export default function UsersPage() {
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                   />
                 </div>
                 <div>
@@ -183,7 +268,7 @@ export default function UsersPage() {
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                   />
                 </div>
                 <div>
@@ -195,7 +280,7 @@ export default function UsersPage() {
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                   />
                 </div>
                 <div>
@@ -205,7 +290,7 @@ export default function UsersPage() {
                   <select
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
                   >
                     <option value="VIEWER">Viewer (Read Only)</option>
                     <option value="EDITOR">Editor (Can Change Status)</option>
@@ -222,6 +307,96 @@ export default function UsersPage() {
             </form>
           )}
 
+          {/* Edit User Modal */}
+          {editingUser && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold">Edit User</h2>
+                  <button
+                    onClick={() => {
+                      setEditingUser(null)
+                      setEditFormData({ username: '', password: '', name: '', role: 'VIEWER' })
+                    }}
+                    className="text-gray-500 hover:text-gray-700 text-2xl"
+                  >
+                    ×
+                  </button>
+                </div>
+                <form onSubmit={handleEditSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Username *
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.username}
+                      onChange={(e) => setEditFormData({ ...editFormData, username: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Password (leave empty to keep current)
+                    </label>
+                    <input
+                      type="password"
+                      value={editFormData.password}
+                      onChange={(e) => setEditFormData({ ...editFormData, password: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                      placeholder="Enter new password or leave empty"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editFormData.name}
+                      onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                      required
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Role *
+                    </label>
+                    <select
+                      value={editFormData.role}
+                      onChange={(e) => setEditFormData({ ...editFormData, role: e.target.value as any })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
+                    >
+                      <option value="VIEWER">Viewer (Read Only)</option>
+                      <option value="EDITOR">Editor (Can Change Status)</option>
+                      <option value="ADMIN">Admin (Full Access)</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-2 pt-4">
+                    <button
+                      type="submit"
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Update User
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditingUser(null)
+                        setEditFormData({ username: '', password: '', name: '', role: 'VIEWER' })
+                      }}
+                      className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
           <div className="overflow-x-auto">
             <table className="min-w-full bg-white border border-gray-200">
               <thead className="bg-gray-50">
@@ -230,6 +405,7 @@ export default function UsersPage() {
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -248,6 +424,22 @@ export default function UsersPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-500">
                       {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEdit(user)}
+                          className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleResetPassword(user.id)}
+                          className="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-xs"
+                        >
+                          Reset Password
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

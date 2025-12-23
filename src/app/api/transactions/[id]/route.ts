@@ -51,11 +51,12 @@ export async function PUT(
       ref: data.ref
     }
 
-    // If status is being changed, update lastUpdatedBy
+    // If status is being changed, update lastUpdatedBy and lastUpdatedAt
     if (data.status !== undefined) {
       updateData.status = data.status && data.status !== '' ? data.status : null
       if (updateData.status !== null) {
         updateData.lastUpdatedBy = user.username
+        updateData.lastUpdatedAt = new Date()
       }
     }
     
