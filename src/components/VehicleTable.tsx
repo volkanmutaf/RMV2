@@ -705,6 +705,47 @@ ${mileage}`
     }
   }
 
+  const handleContactChange = async (transactionId: string, newContact: string) => {
+    try {
+      // Update local state immediately
+      setLocalContacts(prev => ({
+        ...prev,
+        [transactionId]: newContact
+      }))
+      
+      // Update database
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contact: newContact
+        })
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update contact')
+      }
+      
+      // Refresh transactions to get updated contact
+      const refreshResponse = await fetch('/api/transactions')
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setTransactions(data)
+      }
+      
+      console.log('Contact updated successfully!')
+    } catch (error) {
+      console.error('Failed to update contact:', error)
+      // Revert local state on error
+      setLocalContacts(prev => ({
+        ...prev,
+        [transactionId]: transactions.find(t => t.id === transactionId)?.customer.contact || ''
+      }))
+    }
+  }
+
   const handleVehicleNameChange = async (transactionId: string, newName: string) => {
     try {
       // Update local state immediately
