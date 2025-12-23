@@ -49,6 +49,11 @@ export async function PUT(
       ref: data.ref
     }
     
+    // If date is being changed
+    if (data.date !== undefined) {
+      updateData.date = new Date(data.date)
+    }
+    
     // If contact is being changed, update customer
     if (data.contact !== undefined) {
       // Get transaction to find customerId

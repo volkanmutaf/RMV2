@@ -40,6 +40,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editingRef, setEditingRef] = useState<string | null>(null)
   const [editingContact, setEditingContact] = useState<string | null>(null)
+  const [editingDate, setEditingDate] = useState<string | null>(null)
+  const [showNoteModal, setShowNoteModal] = useState(false)
+  const [selectedTransactionForNote, setSelectedTransactionForNote] = useState<string | null>(null)
   const [showCopyNotification, setShowCopyNotification] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -56,6 +59,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
   const [contactValues, setContactValues] = useState<{[key: string]: string}>({})
+  const [dateValues, setDateValues] = useState<{[key: string]: string}>({})
   const [localNotes, setLocalNotes] = useState<{[key: string]: string}>({})
   const [localRefs, setLocalRefs] = useState<{[key: string]: string}>({})
   const [localPlates, setLocalPlates] = useState<{[key: string]: string}>({})
@@ -834,6 +838,133 @@ ${mileage}`
     }
   }
 
+  const handleDateChange = async (transactionId: string, newDate: string) => {
+    try {
+      // Parse the date string (MM/DD/YYYY format)
+      const [month, day, year] = newDate.split('/')
+      const dateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+      
+      if (isNaN(dateObj.getTime())) {
+        throw new Error('Invalid date format')
+      }
+      
+      // Update database
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ date: dateObj.toISOString() }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update date')
+      }
+      
+      // Refresh transactions
+      const refreshResponse = await fetch('/api/transactions')
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setTransactions(data.filter((t: TransactionWithRelations) => !t.archived))
+      }
+      
+      setEditingDate(null)
+      setDateValues(prev => {
+        const updated = {...prev}
+        delete updated[transactionId]
+        return updated
+      })
+      showNotificationMessage('Date updated successfully!', 'success')
+    } catch (error) {
+      console.error('Failed to update date:', error)
+      showNotificationMessage('Failed to update date', 'error')
+      setEditingDate(null)
+      setDateValues(prev => {
+        const updated = {...prev}
+        delete updated[transactionId]
+        return updated
+      })
+    }
+  }
+
+  const openNoteModal = (transactionId: string) => {
+    setSelectedTransactionForNote(transactionId)
+    setShowNoteModal(true)
+  }
+
+  const closeNoteModal = () => {
+    setShowNoteModal(false)
+    setSelectedTransactionForNote(null)
+  }
+
+  const handleNoteSave = async (transactionId: string, newNote: string) => {
+    try {
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-status-change': 'true'
+        },
+        body: JSON.stringify({ note: newNote }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update note')
+      }
+      
+      // Refresh transactions
+      const refreshResponse = await fetch('/api/transactions')
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setTransactions(data.filter((t: TransactionWithRelations) => !t.archived))
+        setLocalNotes(prev => ({
+          ...prev,
+          [transactionId]: newNote
+        }))
+      }
+      
+      showNotificationMessage('Note saved successfully!', 'success')
+      closeNoteModal()
+    } catch (error) {
+      console.error('Failed to save note:', error)
+      showNotificationMessage('Failed to save note', 'error')
+    }
+  }
+
+  const handleNoteDelete = async (transactionId: string) => {
+    try {
+      const response = await fetch(`/api/transactions/${transactionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-status-change': 'true'
+        },
+        body: JSON.stringify({ note: '' }),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete note')
+      }
+      
+      // Refresh transactions
+      const refreshResponse = await fetch('/api/transactions')
+      if (refreshResponse.ok) {
+        const data = await refreshResponse.json()
+        setTransactions(data.filter((t: TransactionWithRelations) => !t.archived))
+        setLocalNotes(prev => ({
+          ...prev,
+          [transactionId]: ''
+        }))
+      }
+      
+      showNotificationMessage('Note deleted successfully!', 'success')
+      closeNoteModal()
+    } catch (error) {
+      console.error('Failed to delete note:', error)
+      showNotificationMessage('Failed to delete note', 'error')
+    }
+  }
+
   const handleArchiveTransaction = async (transactionId: string) => {
     try {
       console.log('Attempting to archive transaction:', transactionId)
@@ -1074,9 +1205,67 @@ ${mileage}`
               {sortedTransactions.map((transaction, index) => (
                 <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <div className="text-xs text-gray-900 font-medium">
-                      {formatDate(transaction.date)}
-                    </div>
+                    {editingDate === transaction.id ? (
+                      <input
+                        type="text"
+                        value={dateValues[transaction.id] !== undefined ? dateValues[transaction.id] : formatDate(transaction.date)}
+                        onChange={(e) => {
+                          // Allow MM/DD/YYYY format
+                          let value = e.target.value.replace(/\D/g, '')
+                          if (value.length > 2) value = value.slice(0, 2) + '/' + value.slice(2)
+                          if (value.length > 5) value = value.slice(0, 5) + '/' + value.slice(5, 9)
+                          setDateValues(prev => ({
+                            ...prev,
+                            [transaction.id]: value
+                          }))
+                        }}
+                        onBlur={(e) => {
+                          const newDate = e.target.value
+                          if (newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                            handleDateChange(transaction.id, newDate)
+                          } else {
+                            setEditingDate(null)
+                            setDateValues(prev => {
+                              const updated = {...prev}
+                              delete updated[transaction.id]
+                              return updated
+                            })
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const newDate = dateValues[transaction.id] || formatDate(transaction.date)
+                            if (newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                              handleDateChange(transaction.id, newDate)
+                            }
+                          } else if (e.key === 'Escape') {
+                            setEditingDate(null)
+                            setDateValues(prev => {
+                              const updated = {...prev}
+                              delete updated[transaction.id]
+                              return updated
+                            })
+                          }
+                        }}
+                        className="text-xs text-gray-900 font-medium bg-white border border-gray-300 rounded px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                        autoFocus
+                        placeholder="MM/DD/YYYY"
+                      />
+                    ) : (
+                      <div 
+                        className="text-xs text-gray-900 font-medium cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                        onClick={() => {
+                          setEditingDate(transaction.id)
+                          setDateValues(prev => ({
+                            ...prev,
+                            [transaction.id]: formatDate(transaction.date)
+                          }))
+                        }}
+                        title="Click to edit date"
+                      >
+                        {formatDate(transaction.date)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <div className="text-xs text-gray-900 font-medium">
@@ -1171,9 +1360,17 @@ ${mileage}`
                     </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
-                    <div className="text-xs font-semibold text-gray-900">
-                      {transaction.note || '-'}
-                    </div>
+                    <button
+                      onClick={() => openNoteModal(transaction.id)}
+                      className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
+                        transaction.note 
+                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                      }`}
+                      title={transaction.note ? "Click to view/edit note" : "Click to add note"}
+                    >
+                      {transaction.note ? '📝 Note' : '➕ No Note'}
+                    </button>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && editingContact === transaction.id ? (
@@ -2761,6 +2958,89 @@ ${mileage}`
           </div>
         </div>
       )}
+
+      {/* Note Modal */}
+      {showNoteModal && selectedTransactionForNote && (() => {
+        const transaction = transactions.find(t => t.id === selectedTransactionForNote)
+        if (!transaction) return null
+        const currentNote = transaction.note || ''
+        
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl w-full">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Note for {formatVehicle(transaction.vehicle)}
+                </h3>
+                <button
+                  onClick={closeNoteModal}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                {currentNote ? (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="text-xs text-blue-600 font-semibold mb-2">📝 Current Note:</div>
+                    <div className="text-sm text-gray-800 whitespace-pre-wrap">{currentNote}</div>
+                  </div>
+                ) : (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-center">
+                    <div className="text-sm text-gray-500">No note available</div>
+                  </div>
+                )}
+              </div>
+              
+              <textarea
+                value={localNotes[selectedTransactionForNote] !== undefined ? localNotes[selectedTransactionForNote] : currentNote}
+                onChange={(e) => {
+                  setLocalNotes(prev => ({
+                    ...prev,
+                    [selectedTransactionForNote]: e.target.value
+                  }))
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 bg-white"
+                placeholder="Enter note here..."
+                rows={6}
+              />
+              
+              <div className="flex space-x-3 mt-4">
+                <button
+                  onClick={() => {
+                    const noteToSave = localNotes[selectedTransactionForNote] !== undefined 
+                      ? localNotes[selectedTransactionForNote] 
+                      : currentNote
+                    handleNoteSave(selectedTransactionForNote, noteToSave)
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Save Note
+                </button>
+                {currentNote && (
+                  <button
+                    onClick={() => {
+                      if (confirm('Are you sure you want to delete this note?')) {
+                        handleNoteDelete(selectedTransactionForNote)
+                      }
+                    }}
+                    className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                )}
+                <button
+                  onClick={closeNoteModal}
+                  className="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
