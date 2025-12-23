@@ -37,7 +37,6 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [isAdmin, setIsAdmin] = useState(false) // Start as non-admin
   const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN or EDITOR)
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
-  const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editingRef, setEditingRef] = useState<string | null>(null)
   const [editingContact, setEditingContact] = useState<string | null>(null)
   const [editingDate, setEditingDate] = useState<string | null>(null)
@@ -651,43 +650,6 @@ ${mileage}`
     }
   }
 
-  const handleNoteChange = async (transactionId: string, newNote: string) => {
-    try {
-      // Update local state immediately
-      setLocalNotes(prev => ({
-        ...prev,
-        [transactionId]: newNote
-      }))
-      
-      // Update database with lastUpdatedBy and lastUpdatedAt
-      const response = await fetch(`/api/transactions/${transactionId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-status-change': 'true' // Mark this as a status change to update lastUpdatedBy
-        },
-        body: JSON.stringify({
-          note: newNote
-        })
-      })
-      
-      if (!response.ok) {
-        throw new Error('Failed to update note')
-      }
-      
-      // Refresh the page data by reloading transactions
-      window.location.reload()
-      
-      console.log('Note updated successfully!')
-    } catch (error) {
-      console.error('Failed to update note:', error)
-      // Revert local state on error
-      setLocalNotes(prev => ({
-        ...prev,
-        [transactionId]: transactions.find(t => t.id === transactionId)?.note || ''
-      }))
-    }
-  }
 
   const handleRefChange = async (transactionId: string, newRef: string) => {
     try {
@@ -2137,66 +2099,18 @@ ${mileage}`
             
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <span className="text-gray-500 text-xs">Note:</span>
-              {canEdit && editingNote === transaction.id ? (
-                <input
-                  type="text"
-                  className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-full mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                  placeholder="Enter note..."
-                  value={noteValues[transaction.id] !== undefined ? noteValues[transaction.id] : (localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note || '')}
-                  onChange={(e) => {
-                    setNoteValues(prev => ({
-                      ...prev,
-                      [transaction.id]: e.target.value
-                    }))
-                  }}
-                  autoFocus
-                  onBlur={(e) => {
-                    const newValue = e.target.value.trim()
-                    handleNoteChange(transaction.id, newValue)
-                    setEditingNote(null)
-                    setNoteValues(prev => {
-                      const updated = {...prev}
-                      delete updated[transaction.id]
-                      return updated
-                    })
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      const newValue = e.currentTarget.value.trim()
-                      handleNoteChange(transaction.id, newValue)
-                      setEditingNote(null)
-                      setNoteValues(prev => {
-                        const updated = {...prev}
-                        delete updated[transaction.id]
-                        return updated
-                      })
-                    } else if (e.key === 'Escape') {
-                      setEditingNote(null)
-                      setNoteValues(prev => {
-                        const updated = {...prev}
-                        delete updated[transaction.id]
-                        return updated
-                      })
-                    }
-                  }}
-                />
-              ) : (
-                <div 
-                  className="text-xs font-semibold text-gray-900 mt-1 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded transition-colors"
-                  onClick={() => {
-                    if (canEdit) {
-                      setNoteValues(prev => ({
-                        ...prev,
-                        [transaction.id]: localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note || ''
-                      }))
-                      setEditingNote(transaction.id)
-                    }
-                  }}
+                <button
+                  onClick={() => openNoteModal(transaction.id)}
+                  className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full ${
+                    transaction.note 
+                      ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  }`}
+                  title={transaction.note ? "Click to view/edit note" : "Click to add note"}
                 >
-                  {(localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note) || '-'}
-                </div>
-              )}
-            </div>
+                  {transaction.note ? '📝 Note' : '➕ No Note'}
+                </button>
+              </div>
             {transaction.lastUpdatedBy && (
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <span className="text-gray-500 text-xs">Last Updated By:</span>
@@ -2552,78 +2466,17 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {canEdit && editingNote === transaction.id ? (
-                    <input
-                      type="text"
-                      className="text-xs border-2 border-blue-300 rounded px-2 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-900"
-                      placeholder="Enter note..."
-                      value={noteValues[transaction.id] || ''}
-                      onChange={(e) => {
-                        setNoteValues(prev => ({
-                          ...prev,
-                          [transaction.id]: e.target.value
-                        }))
-                      }}
-                      autoFocus
-                      onBlur={(e) => {
-                        const newValue = e.target.value.trim()
-                        handleNoteChange(transaction.id, newValue)
-                        setEditingNote(null)
-                        setNoteValues(prev => {
-                          const updated = {...prev}
-                          delete updated[transaction.id]
-                          return updated
-                        })
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          const newValue = e.currentTarget.value.trim()
-                          handleNoteChange(transaction.id, newValue)
-                          setEditingNote(null)
-                          setNoteValues(prev => {
-                            const updated = {...prev}
-                            delete updated[transaction.id]
-                            return updated
-                          })
-                        } else if (e.key === 'Escape') {
-                          setEditingNote(null)
-                          setNoteValues(prev => {
-                            const updated = {...prev}
-                            delete updated[transaction.id]
-                            return updated
-                          })
-                        }
-                      }}
-                    />
-                  ) : (
-                    <div 
-                      className="relative inline-flex items-center px-2 py-1 rounded text-xs font-medium cursor-pointer hover:bg-gray-50 transition-colors group border border-gray-300 bg-white text-gray-900 min-w-[100px] h-8"
-                      onClick={() => {
-                        if (canEdit) {
-                          setNoteValues(prev => ({
-                            ...prev,
-                            [transaction.id]: '' // Start with empty input
-                          }))
-                          setEditingNote(transaction.id)
-                        }
-                      }}
-                    >
-                      {(localNotes[transaction.id] !== undefined ? localNotes[transaction.id] : transaction.note) || '-'}
-                      {canEdit && (
-                        <button
-                          className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
-                          onClick={(e) => {
-                            e.preventDefault()
-                            e.stopPropagation()
-                            handleNoteChange(transaction.id, '')
-                          }}
-                          title="Clear note"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  <button
+                    onClick={() => openNoteModal(transaction.id)}
+                    className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
+                      transaction.note 
+                        ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                    }`}
+                    title={transaction.note ? "Click to view/edit note" : "Click to add note"}
+                  >
+                    {transaction.note ? '📝 Note' : '➕ No Note'}
+                  </button>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {isAdmin && editingContact === transaction.id ? (
