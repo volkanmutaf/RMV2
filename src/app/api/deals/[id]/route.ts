@@ -48,7 +48,35 @@ export async function PUT(
       }
     })
     
-    return NextResponse.json(deal)
+    // Get all transactions to match deal numbers with Ref column
+    const transactions = await prisma.transaction.findMany({
+      include: {
+        vehicle: true,
+        customer: true,
+      },
+      where: {
+        archived: false,
+      }
+    })
+    
+    // Find matching transaction
+    const matchingTransaction = transactions.find(t => {
+      if (!t.ref) return false
+      const refMatch = t.ref.match(/\b\d{4}\b/)
+      return refMatch && refMatch[0] === deal.dealNumber
+    })
+    
+    const dealWithVehicle = {
+      ...deal,
+      vehicle: matchingTransaction ? {
+        year: matchingTransaction.vehicle.year,
+        make: matchingTransaction.vehicle.make,
+        model: matchingTransaction.vehicle.model,
+        vin: matchingTransaction.vehicle.vin,
+      } : null
+    }
+    
+    return NextResponse.json(dealWithVehicle)
   } catch (error) {
     console.error('Error updating deal:', error)
     return NextResponse.json({ error: 'Failed to update deal' }, { status: 500 })
