@@ -54,7 +54,6 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
   const [showUrgentConfirm, setShowUrgentConfirm] = useState(false)
   const [transactionToUrgent, setTransactionToUrgent] = useState<string | null>(null)
-  const [noteValues, setNoteValues] = useState<{[key: string]: string}>({})
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
   const [contactValues, setContactValues] = useState<{[key: string]: string}>({})
