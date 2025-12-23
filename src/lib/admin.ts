@@ -8,14 +8,17 @@ export const isAdmin = (request: NextRequest): boolean => {
                    '127.0.0.1'
   
   // Admin IP'leri (sadece server IP)
-  const adminIPs = [
-    '10.0.0.140',  // Server IP
-    '127.0.0.1',   // Localhost
-    '::1'          // IPv6 localhost
-  ]
+  // Production'da tüm IP'lere admin erişimi (geçici - güvenlik için daha sonra kısıtlanmalı)
+  const adminIPs = process.env.NODE_ENV === 'production' 
+    ? ['*'] // Production'da tüm IP'ler
+    : [
+        '10.0.0.140',  // Server IP
+        '127.0.0.1',   // Localhost
+        '::1'          // IPv6 localhost
+      ]
   
   // IP kontrolü
-  const isAdminIP = adminIPs.includes(clientIP)
+  const isAdminIP = adminIPs.includes('*') || adminIPs.includes(clientIP)
   
   console.log('Admin check:', { clientIP, isAdminIP })
   
