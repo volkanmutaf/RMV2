@@ -1320,12 +1320,12 @@ ${mileage}`
             )}
           </div>
           {isAdmin && (
-            <button
-              onClick={() => window.location.href = '/deals'}
-              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+            <a
+              href="/deals"
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer inline-block text-center"
             >
               💰 Deals
-            </button>
+            </a>
           )}
           <button
             onClick={() => window.location.reload()}

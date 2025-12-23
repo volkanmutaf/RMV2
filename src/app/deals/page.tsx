@@ -36,11 +36,11 @@ export default function DealsPage() {
     fetch('/api/auth/me')
       .then(res => res.json())
       .then(data => {
-        if (!data || data.role !== 'ADMIN') {
+        if (!data || !data.user || data.user.role !== 'ADMIN') {
           router.push('/')
           return
         }
-        setCurrentUser(data)
+        setCurrentUser(data.user)
         
         // Fetch deals
         fetch('/api/deals')
