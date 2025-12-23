@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin } from '@/lib/admin'
+import { cookies } from 'next/headers'
+import { UserSession, isAdmin } from '@/lib/auth'
+
+async function getCurrentUser(): Promise<UserSession | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('user_session')
+    if (!sessionCookie) return null
+    return JSON.parse(sessionCookie.value) as UserSession
+  } catch {
+    return null
+  }
+}
 
 export async function POST(
   request: NextRequest,
@@ -8,7 +20,11 @@ export async function POST(
 ) {
   try {
     // Admin kontrolü
-    requireAdmin(request)
+    const user = await getCurrentUser()
+    
+    if (!isAdmin(user)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
     
     const { id } = await params
     console.log('Archive API called with ID:', id)
@@ -40,7 +56,11 @@ export async function DELETE(
 ) {
   try {
     // Admin kontrolü
-    requireAdmin(request)
+    const user = await getCurrentUser()
+    
+    if (!isAdmin(user)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
     
     const { id } = await params
     console.log('Unarchive API called with ID:', id)

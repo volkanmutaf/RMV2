@@ -100,12 +100,6 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error creating transaction:', error)
     
-    // Admin error kontrolü
-    const adminError = handleAdminError(error)
-    if (adminError) {
-      return NextResponse.json({ error: adminError.message }, { status: adminError.status })
-    }
-    
     return NextResponse.json({ 
       error: 'Failed to create transaction', 
       details: error instanceof Error ? error.message : 'Unknown error' 

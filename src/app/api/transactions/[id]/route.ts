@@ -73,12 +73,6 @@ export async function PUT(
   } catch (error) {
     console.error('Error updating transaction:', error)
     
-    // Admin error kontrolü
-    const adminError = handleAdminError(error)
-    if (adminError) {
-      return NextResponse.json({ error: adminError.message }, { status: adminError.status })
-    }
-    
     return NextResponse.json({ error: 'Failed to update transaction' }, { status: 500 })
   }
 }
@@ -89,7 +83,11 @@ export async function DELETE(
 ) {
   try {
     // Admin kontrolü
-    requireAdmin(request)
+    const user = await getCurrentUser()
+    
+    if (!isAdmin(user)) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
     
     const { id } = await params
     
@@ -100,12 +98,6 @@ export async function DELETE(
     return NextResponse.json({ message: 'Transaction deleted successfully' })
   } catch (error) {
     console.error('Error deleting transaction:', error)
-    
-    // Admin error kontrolü
-    const adminError = handleAdminError(error)
-    if (adminError) {
-      return NextResponse.json({ error: adminError.message }, { status: adminError.status })
-    }
     
     return NextResponse.json({ error: 'Failed to delete transaction' }, { status: 500 })
   }
