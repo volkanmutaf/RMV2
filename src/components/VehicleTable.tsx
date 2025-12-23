@@ -1220,7 +1220,7 @@ ${mileage}`
                           }))
                         }}
                         onBlur={(e) => {
-                          const newDate = e.target.value
+                          const newDate = dateValues[transaction.id] || formatDate(transaction.date)
                           if (newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
                             handleDateChange(transaction.id, newDate)
                           } else {
