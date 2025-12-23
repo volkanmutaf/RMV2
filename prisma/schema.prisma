@@ -21,6 +21,8 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
+  deals     Deal[]
+  
   @@map("users")
 }
 
@@ -114,4 +116,24 @@ model Note {
 enum NoteType {
   READY
   REGISTRATION_PICKED_UP
+}
+
+// Deal model
+model Deal {
+  id          String    @id @default(cuid())
+  dealNumber  String    // 4-digit number
+  type        DealType
+  amount      Float?    // Admin can edit this
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  createdBy   User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  
+  @@map("deals")
+}
+
+enum DealType {
+  DEPOSIT
+  DEAL
 }

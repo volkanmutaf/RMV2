@@ -62,6 +62,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [showExcelParseModal, setShowExcelParseModal] = useState(false)
   const [excelParseInput, setExcelParseInput] = useState('')
   const [excelParseOutput, setExcelParseOutput] = useState('')
+  const [showAddDealModal, setShowAddDealModal] = useState(false)
+  const [dealNumber, setDealNumber] = useState('')
+  const [dealType, setDealType] = useState<'DEPOSIT' | 'DEAL' | ''>('')
   const [editingVehicle, setEditingVehicle] = useState<string | null>(null)
   const [vehicleNames, setVehicleNames] = useState<{[key: string]: string}>({})
 
@@ -1286,27 +1289,43 @@ ${mileage}`
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row gap-2 justify-between">
           <div className="flex flex-col sm:flex-row gap-2">
+          <div className="flex flex-row gap-2">
+            <button
+              onClick={() => setShowAddDealModal(true)}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+            >
+              💰 Add Deal
+            </button>
+            {isAdmin && (
+              <>
+                <button
+                  onClick={() => setShowQuickAdd(!showQuickAdd)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                >
+                    {showQuickAdd ? '❌ Cancel' : '➕ Add Vehicle'}
+                </button>
+                <button
+                  onClick={() => setShowTestModal(true)}
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                >
+                    🧪 Test Parse
+                </button>
+                <button
+                  onClick={() => setShowExcelParseModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                >
+                    📊 Excel Parse
+                </button>
+              </>
+            )}
+          </div>
           {isAdmin && (
-            <div className="flex flex-row gap-2">
-              <button
-                onClick={() => setShowQuickAdd(!showQuickAdd)}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-              >
-                  {showQuickAdd ? '❌ Cancel' : '➕ Add Vehicle'}
-              </button>
-              <button
-                onClick={() => setShowTestModal(true)}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-              >
-                  🧪 Test Parse
-              </button>
-              <button
-                onClick={() => setShowExcelParseModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-              >
-                  📊 Excel Parse
-              </button>
-            </div>
+            <button
+              onClick={() => window.location.href = '/deals'}
+              className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+            >
+              💰 Deals
+            </button>
           )}
           <button
             onClick={() => window.location.reload()}
@@ -2374,6 +2393,131 @@ ${mileage}`
                   className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation cursor-pointer"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Deal Modal */}
+      {showAddDealModal && (
+        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full border border-gray-200">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-gray-900">Add Deal</h3>
+                <button
+                  onClick={() => {
+                    setShowAddDealModal(false)
+                    setDealNumber('')
+                    setDealType('')
+                  }}
+                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Deal Number (4 digits) *
+                </label>
+                <input
+                  type="text"
+                  value={dealNumber}
+                  onChange={(e) => {
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                    setDealNumber(value)
+                  }}
+                  placeholder="0000"
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                  maxLength={4}
+                />
+              </div>
+              
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Type *
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="dealType"
+                      value="DEPOSIT"
+                      checked={dealType === 'DEPOSIT'}
+                      onChange={(e) => setDealType(e.target.value as 'DEPOSIT' | 'DEAL')}
+                      className="mr-2 w-4 h-4 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-sm text-gray-900">Deposit</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="dealType"
+                      value="DEAL"
+                      checked={dealType === 'DEAL'}
+                      onChange={(e) => setDealType(e.target.value as 'DEPOSIT' | 'DEAL')}
+                      className="mr-2 w-4 h-4 text-orange-600 focus:ring-orange-500"
+                    />
+                    <span className="text-sm text-gray-900">Deal</span>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setShowAddDealModal(false)
+                    setDealNumber('')
+                    setDealType('')
+                  }}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={async () => {
+                    if (dealNumber.length !== 4) {
+                      showNotificationMessage('Deal number must be exactly 4 digits', 'error')
+                      return
+                    }
+                    if (!dealType) {
+                      showNotificationMessage('Please select a type (Deposit or Deal)', 'error')
+                      return
+                    }
+                    
+                    try {
+                      const response = await fetch('/api/deals', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                          dealNumber,
+                          type: dealType,
+                        }),
+                      })
+                      
+                      if (!response.ok) {
+                        const error = await response.json()
+                        throw new Error(error.error || 'Failed to create deal')
+                      }
+                      
+                      showNotificationMessage('Deal added successfully!', 'success')
+                      setShowAddDealModal(false)
+                      setDealNumber('')
+                      setDealType('')
+                    } catch (error) {
+                      console.error('Failed to create deal:', error)
+                      showNotificationMessage(error instanceof Error ? error.message : 'Failed to create deal', 'error')
+                    }
+                  }}
+                  disabled={dealNumber.length !== 4 || !dealType}
+                  className="bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation cursor-pointer"
+                >
+                  Save
                 </button>
               </div>
             </div>
