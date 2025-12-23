@@ -48,6 +48,8 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [notificationType, setNotificationType] = useState<'success' | 'error' | 'warning'>('success')
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false)
   const [transactionToArchive, setTransactionToArchive] = useState<string | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [transactionToDelete, setTransactionToDelete] = useState<string | null>(null)
   const [noteValues, setNoteValues] = useState<{[key: string]: string}>({})
   const [refValues, setRefValues] = useState<{[key: string]: string}>({})
   const [plateValues, setPlateValues] = useState<{[key: string]: string}>({})
@@ -152,7 +154,8 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     { value: 'READY_FOR_PICKUP', label: 'Ready for pick up' },
     { value: 'TITLE_PENDING', label: 'Title Pending' },
     { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
-    { value: 'TITLE_REQUESTED', label: 'Title Requested' }
+    { value: 'TITLE_REQUESTED', label: 'Title Requested' },
+    { value: 'DEPOSIT', label: 'Deposit' }
   ]
 
   const copyToClipboard = async (text: string) => {
@@ -607,6 +610,8 @@ ${mileage}`
         return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border-orange-300 shadow-sm'
       case 'TITLE_REQUESTED':
         return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300 shadow-sm'
+      case 'DEPOSIT':
+        return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-600 border-gray-300 shadow-sm'
       default:
         return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300 shadow-sm'
     }
@@ -633,6 +638,8 @@ ${mileage}`
         return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-400 shadow-sm'
       case 'TITLE_REQUESTED':
         return 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-400 shadow-sm'
+      case 'DEPOSIT':
+        return 'bg-gradient-to-r from-gray-50 to-gray-100 border-l-4 border-gray-300 shadow-sm'
       default:
         return ''
     }
@@ -876,6 +883,40 @@ ${mileage}`
     }
   }
 
+  const confirmDelete = (transactionId: string) => {
+    setTransactionToDelete(transactionId)
+    setShowDeleteConfirm(true)
+  }
+
+  const executeDelete = async () => {
+    if (!transactionToDelete) return
+    
+    try {
+      const response = await fetch(`/api/transactions/${transactionToDelete}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete transaction')
+      }
+      
+      // Remove from local state
+      setTransactions(prev => prev.filter(t => t.id !== transactionToDelete))
+      
+      showNotificationMessage('Transaction deleted successfully!', 'success')
+      setShowDeleteConfirm(false)
+      setTransactionToDelete(null)
+    } catch (error) {
+      console.error('Failed to delete transaction:', error)
+      showNotificationMessage('Failed to delete transaction', 'error')
+      setShowDeleteConfirm(false)
+      setTransactionToDelete(null)
+    }
+  }
+
 
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -1080,11 +1121,11 @@ ${mileage}`
                       <div className={`text-xs font-medium px-2 py-1 rounded-full ${
                         getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
                       }`}>
-                        {transaction.status ? 
-                          statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                          transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                          : '-'
-                        }
+                      {transaction.status ? 
+                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                        : '-'
+                      }
                       </div>
                     )}
                   </td>
@@ -1209,17 +1250,26 @@ ${mileage}`
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && (
+                      <div className="flex gap-1">
                       <button
                         onClick={() => confirmArchive(transaction.id)}
-                        className={`${
-                          (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
-                            ? 'bg-green-500 hover:bg-green-600'
-                            : 'bg-orange-500 hover:bg-orange-600'
-                        } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
+                          className={`${
+                            (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                              ? 'bg-green-500 hover:bg-green-600'
+                              : 'bg-orange-500 hover:bg-orange-600'
+                          } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
                         title="Add to archive"
                       >
                         📁
                       </button>
+                        <button
+                          onClick={() => confirmDelete(transaction.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+                          title="Delete permanently"
+                        >
+                          🗑️
+                        </button>
+                      </div>
                     )}
                   </td>
                 </tr>
@@ -1446,7 +1496,7 @@ ${mileage}`
       <div className="mb-4">
         <div className="flex flex-col sm:flex-row gap-2 justify-between">
           <div className="flex flex-col sm:flex-row gap-2">
-          <div className="flex flex-row gap-2">
+            <div className="flex flex-row gap-2">
             <button
               onClick={() => setShowAddDealModal(true)}
               className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
@@ -1455,27 +1505,27 @@ ${mileage}`
             </button>
             {isAdmin && (
               <>
-                <button
-                  onClick={() => setShowQuickAdd(!showQuickAdd)}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-                >
-                    {showQuickAdd ? '❌ Cancel' : '➕ Add Vehicle'}
-                </button>
-                <button
-                  onClick={() => setShowTestModal(true)}
-                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-                >
-                    🧪 Test Parse
-                </button>
-                <button
-                  onClick={() => setShowExcelParseModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-                >
-                    📊 Excel Parse
-                </button>
+              <button
+                onClick={() => setShowQuickAdd(!showQuickAdd)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+              >
+                  {showQuickAdd ? '❌ Cancel' : '➕ Add Vehicle'}
+              </button>
+              <button
+                onClick={() => setShowTestModal(true)}
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+              >
+                  🧪 Test Parse
+              </button>
+              <button
+                onClick={() => setShowExcelParseModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+              >
+                  📊 Excel Parse
+              </button>
               </>
             )}
-          </div>
+            </div>
           {isAdmin && (
             <a
               href="/deals"
@@ -1511,14 +1561,14 @@ ${mileage}`
                     👥 Users
                   </button>
                 )}
-                {isAdmin && (
-                  <button
-                    onClick={() => window.open('/archive', '_blank')}
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-                  >
-                    📁 Archive
-                  </button>
-                )}
+            {isAdmin && (
+              <button
+                onClick={() => window.open('/archive', '_blank')}
+                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+              >
+                📁 Archive
+              </button>
+            )}
                 <button
                   onClick={async () => {
                     await fetch('/api/auth/logout', { method: 'POST' })
@@ -1751,14 +1801,14 @@ ${mileage}`
                   </select>
                 ) : (
                   <div className="flex flex-col">
-                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                      getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
-                    }`}>
-                      {transaction.status ? 
-                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                        : '-'
-                      }
+                  <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                  }`}>
+                    {transaction.status ? 
+                      statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                      transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                      : '-'
+                    }
                     </div>
                   </div>
                 )}
@@ -1852,8 +1902,8 @@ ${mileage}`
               </div>
             </div>
             
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <span className="text-gray-500 text-xs">Note:</span>
+              <div className="mt-3 pt-3 border-t border-gray-200">
+                <span className="text-gray-500 text-xs">Note:</span>
               {canEdit && editingNote === transaction.id ? (
                 <input
                   type="text"
@@ -1936,9 +1986,9 @@ ${mileage}`
               </div>
             )}
             
-            {/* Archive Button */}
+            {/* Archive and Delete Buttons */}
             {isAdmin && (
-              <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
                 <button
                   onClick={() => confirmArchive(transaction.id)}
                   className={`w-full ${
@@ -1949,6 +1999,13 @@ ${mileage}`
                   title="Add to archive"
                 >
                   📁 Add to Archive
+                </button>
+                <button
+                  onClick={() => confirmDelete(transaction.id)}
+                  className="w-full bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm font-medium transition-colors cursor-pointer"
+                  title="Delete permanently"
+                >
+                  🗑️ Delete Permanently
                 </button>
               </div>
             )}
@@ -2131,59 +2188,59 @@ ${mileage}`
                 <td className="px-3 py-2 whitespace-nowrap">
                   {canEdit ? (
                     <>
-                      <select 
-                        className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] shadow-sm hover:border-gray-400 transition-colors ${
-                          getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
-                        }`}
-                        value={localStatuses[transaction.id] || transaction.status || ''}
-                        onChange={(e) => {
-                          handleStatusChange(transaction.id, e.target.value)
-                        }}
-                        style={{
-                          backgroundColor: (() => {
-                            const status = localStatuses[transaction.id] || transaction.status || ''
-                            if (status === 'REGISTERED') return '#fef2f2'
-                            if (status === 'PICKED_UP') return '#f0fdf4'
-                            if (status === 'INSPECTED') return '#eff6ff'
-                            if (status === 'TRANSFER_PLATE') return '#faf5ff'
-                            if (status === 'RE_INSPECTION') return '#fff7ed'
-                            if (status === 'READY_FOR_PICKUP') return '#ecfdf5'
-                            if (status === 'TITLE_PENDING') return '#fef2f2'
-                            if (status === 'AWAITING_STAMP') return '#fff7ed'
+                    <select 
+                      className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] shadow-sm hover:border-gray-400 transition-colors ${
+                        getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                      }`}
+                      value={localStatuses[transaction.id] || transaction.status || ''}
+                      onChange={(e) => {
+                        handleStatusChange(transaction.id, e.target.value)
+                      }}
+                      style={{
+                        backgroundColor: (() => {
+                          const status = localStatuses[transaction.id] || transaction.status || ''
+                          if (status === 'REGISTERED') return '#fef2f2'
+                          if (status === 'PICKED_UP') return '#f0fdf4'
+                          if (status === 'INSPECTED') return '#eff6ff'
+                          if (status === 'TRANSFER_PLATE') return '#faf5ff'
+                          if (status === 'RE_INSPECTION') return '#fff7ed'
+                          if (status === 'READY_FOR_PICKUP') return '#ecfdf5'
+                          if (status === 'TITLE_PENDING') return '#fef2f2'
+                          if (status === 'AWAITING_STAMP') return '#fff7ed'
                             if (status === 'TITLE_REQUESTED') return '#f0fdf4'
-                            return '#f9fafb'
-                          })(),
-                          color: (() => {
-                            const status = localStatuses[transaction.id] || transaction.status || ''
-                            if (status === 'REGISTERED') return '#991b1b'
-                            if (status === 'PICKED_UP') return '#166534'
-                            if (status === 'INSPECTED') return '#1e40af'
-                            if (status === 'TRANSFER_PLATE') return '#7c3aed'
-                            if (status === 'RE_INSPECTION') return '#c2410c'
-                            if (status === 'READY_FOR_PICKUP') return '#047857'
-                            if (status === 'TITLE_PENDING') return '#991b1b'
-                            if (status === 'AWAITING_STAMP') return '#c2410c'
+                          return '#f9fafb'
+                        })(),
+                        color: (() => {
+                          const status = localStatuses[transaction.id] || transaction.status || ''
+                          if (status === 'REGISTERED') return '#991b1b'
+                          if (status === 'PICKED_UP') return '#166534'
+                          if (status === 'INSPECTED') return '#1e40af'
+                          if (status === 'TRANSFER_PLATE') return '#7c3aed'
+                          if (status === 'RE_INSPECTION') return '#c2410c'
+                          if (status === 'READY_FOR_PICKUP') return '#047857'
+                          if (status === 'TITLE_PENDING') return '#991b1b'
+                          if (status === 'AWAITING_STAMP') return '#c2410c'
                             if (status === 'TITLE_REQUESTED') return '#166534'
-                            return '#374151'
-                          })()
-                        }}
-                      >
-                        {statusOptions.map((option) => (
-                          <option key={option.value} value={option.value} className="text-gray-900 bg-white">
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+                          return '#374151'
+                        })()
+                      }}
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value} className="text-gray-900 bg-white">
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                     </>
                   ) : (
                     <div className="flex flex-col">
-                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
-                        {transaction.status ? 
-                          statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                          transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                          : '-'
-                        }
-                      </span>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
+                      {transaction.status ? 
+                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                        : '-'
+                      }
+                    </span>
                     </div>
                   )}
                 </td>
@@ -2439,7 +2496,7 @@ ${mileage}`
                         
                         // Only save if value actually changed
                         if (newValue !== originalValue) {
-                          handleRefChange(transaction.id, newValue)
+                        handleRefChange(transaction.id, newValue)
                         }
                         setEditingRef(null)
                         setRefValues(prev => {
@@ -2455,7 +2512,7 @@ ${mileage}`
                           
                           // Only save if value actually changed
                           if (newValue !== originalValue) {
-                            handleRefChange(transaction.id, newValue)
+                          handleRefChange(transaction.id, newValue)
                           }
                           setEditingRef(null)
                           setRefValues(prev => {
@@ -2528,17 +2585,28 @@ ${mileage}`
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">
+                    {isAdmin && (
+                      <>
                     <button
                       onClick={() => confirmArchive(transaction.id)}
-                      className={`${
-                        (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
-                          ? 'bg-green-500 hover:bg-green-600'
-                          : 'bg-orange-500 hover:bg-orange-600'
-                      } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
+                          className={`${
+                            (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                              ? 'bg-green-500 hover:bg-green-600'
+                              : 'bg-orange-500 hover:bg-orange-600'
+                          } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
                       title="Add to archive"
                     >
                       📁
                     </button>
+                        <button
+                          onClick={() => confirmDelete(transaction.id)}
+                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
+                          title="Delete permanently"
+                        >
+                          🗑️
+                        </button>
+                      </>
+                    )}
            {(transaction.status === 'TITLE_PENDING' || localStatuses[transaction.id] === 'TITLE_PENDING') && (
              <div 
                className="w-3 h-3 bg-red-500 rounded-full"
@@ -2606,6 +2674,38 @@ ${mileage}`
                   className="flex-1 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
                 >
                   Add to Archive
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md mx-4 shadow-xl">
+            <div className="text-center">
+              <div className="text-4xl mb-4 text-red-500">🗑️</div>
+              <h3 className="text-lg font-semibold mb-2 text-red-600">Delete Permanently</h3>
+              <p className="text-gray-700 mb-4">
+                Are you sure you want to delete this transaction? This will permanently delete the transaction, vehicle, and customer from the database. This action cannot be undone.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false)
+                    setTransactionToDelete(null)
+                  }}
+                  className="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-700 rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={executeDelete}
+                  className="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
+                >
+                  Delete Permanently
                 </button>
               </div>
             </div>

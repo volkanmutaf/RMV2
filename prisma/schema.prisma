@@ -99,6 +99,7 @@ enum VehicleStatus {
   TITLE_PENDING
   AWAITING_STAMP
   TITLE_REQUESTED
+  DEPOSIT
 }
 
 // Note model for dashboard notes
