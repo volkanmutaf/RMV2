@@ -2056,6 +2056,22 @@ ${mileage}`
                         </option>
                       ))}
                     </select>
+                    {transaction.lastUpdatedBy && (
+                      <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                        <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
+                        {(transaction as any).lastUpdatedAt && (
+                          <div className="text-gray-500 text-[10px]">
+                            🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   ) : (
                     <div className="flex flex-col">
                       <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
@@ -2066,11 +2082,17 @@ ${mileage}`
                         }
                       </span>
                       {transaction.lastUpdatedBy && (
-                        <div className="text-xs text-gray-500 mt-1">
-                          <div>Last updated by: {transaction.lastUpdatedBy}</div>
+                        <div className="mt-1 text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded border border-gray-200">
+                          <div className="font-medium">👤 {transaction.lastUpdatedBy}</div>
                           {(transaction as any).lastUpdatedAt && (
-                            <div className="text-xs text-gray-400">
-                              {new Date((transaction as any).lastUpdatedAt).toLocaleString()}
+                            <div className="text-gray-500 text-[10px]">
+                              🕒 {new Date((transaction as any).lastUpdatedAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
                             </div>
                           )}
                         </div>
