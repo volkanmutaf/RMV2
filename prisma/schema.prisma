@@ -14,7 +14,8 @@ datasource db {
 // User model
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
+  username  String   @unique
+  password  String   // Hashed password
   name      String
   role      UserRole @default(VIEWER)
   createdAt DateTime @default(now())
@@ -65,6 +66,7 @@ model Transaction {
   ref       String?
   archived  Boolean       @default(false)
   archivedAt DateTime?
+  lastUpdatedBy String?   // Username of user who last updated status
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
   
@@ -77,7 +79,8 @@ model Transaction {
 // Enum values
 enum UserRole {
   ADMIN
-  VIEWER
+  EDITOR  // Can only change status
+  VIEWER  // Read only
 }
 
 enum PaymentStatus {

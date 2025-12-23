@@ -1,0 +1,8 @@
+Supabase Connection String (SSL ile):
+
+postgresql://postgres:7uz5yX086Gbj7T0L@db.vohodmdcloloexiwgngd.supabase.co:5432/postgres?sslmode=require
+
+VEYA Connection Pooling (Önerilen):
+
+postgresql://postgres.vohodmdcloloexiwgngd:7uz5yX086Gbj7T0L@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require
+

@@ -6,14 +6,24 @@ import { Transaction, Vehicle, Customer, VehicleStatus } from '@/generated/prism
 interface TransactionWithRelations extends Transaction {
   vehicle: Vehicle
   customer: Customer
+  lastUpdatedBy?: string | null
+}
+
+interface UserSession {
+  id: string
+  username: string
+  name: string
+  role: 'ADMIN' | 'EDITOR' | 'VIEWER'
 }
 
 interface VehicleTableProps {
   transactions: TransactionWithRelations[]
+  currentUser: UserSession | null
 }
 
-export default function VehicleTable({ transactions }: VehicleTableProps) {
+export default function VehicleTable({ transactions, currentUser }: VehicleTableProps) {
   const [isAdmin, setIsAdmin] = useState(false) // Start as non-admin
+  const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN or EDITOR)
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
   const [editingTax, setEditingTax] = useState<string | null>(null)
   const [editingNote, setEditingNote] = useState<string | null>(null)
@@ -61,19 +71,11 @@ export default function VehicleTable({ transactions }: VehicleTableProps) {
   
   // Admin IP kontrolü
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      try {
-        const response = await fetch('/api/admin/check')
-        const data = await response.json()
-        setIsAdmin(data.isAdmin || false)
-      } catch (error) {
-        console.error('Admin check failed:', error)
-        setIsAdmin(false)
-      }
+    if (currentUser) {
+      setIsAdmin(currentUser.role === 'ADMIN')
+      setCanEdit(currentUser.role === 'ADMIN' || currentUser.role === 'EDITOR')
     }
-    
-    checkAdminStatus()
-  }, [])
+  }, [currentUser])
   const [quickAddText, setQuickAddText] = useState('')
   const [parsedData, setParsedData] = useState<{
     vehicle: string
@@ -515,6 +517,7 @@ ${mileage}`
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-status-change': 'true' // Mark this as a status change
         },
         body: JSON.stringify({
           status: newStatus === '' ? null : newStatus
@@ -1356,14 +1359,38 @@ ${mileage}`
               📊 Dashboard
           </button>
           </div>
-          <div className="flex justify-end">
-            {isAdmin && (
-              <button
-                onClick={() => window.open('/archive', '_blank')}
-                className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-              >
-                📁 Archive
-              </button>
+          <div className="flex justify-end gap-2 items-center">
+            {currentUser && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">
+                  {currentUser.name} ({currentUser.role})
+                </span>
+                {isAdmin && (
+                  <button
+                    onClick={() => window.location.href = '/users'}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                  >
+                    👥 Users
+                  </button>
+                )}
+                {isAdmin && (
+                  <button
+                    onClick={() => window.open('/archive', '_blank')}
+                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                  >
+                    📁 Archive
+                  </button>
+                )}
+                <button
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' })
+                    window.location.href = '/login'
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+                >
+                  🚪 Logout
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -1592,7 +1619,7 @@ ${mileage}`
               </div>
               <div>
                 <span className="text-gray-500">Status:</span>
-                {isAdmin ? (
+                {canEdit ? (
                   <select 
                     className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-full touch-manipulation ${
                       getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
@@ -1609,14 +1636,21 @@ ${mileage}`
                     ))}
                   </select>
                 ) : (
-                  <div className={`text-xs font-medium px-2 py-1 rounded-full ${
-                    getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
-                  }`}>
-                    {transaction.status ? 
-                      statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                      transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                      : '-'
-                    }
+                  <div className="flex flex-col">
+                    <div className={`text-xs font-medium px-2 py-1 rounded-full ${
+                      getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
+                    }`}>
+                      {transaction.status ? 
+                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                        : '-'
+                      }
+                    </div>
+                    {transaction.lastUpdatedBy && (
+                      <span className="text-xs text-gray-500 mt-1">
+                        Last updated by: {transaction.lastUpdatedBy}
+                      </span>
+                    )}
                   </div>
                 )}
               </div>
@@ -1935,7 +1969,7 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  {isAdmin ? (
+                  {canEdit ? (
                     <select 
                       className={`text-xs font-medium border rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 min-w-[120px] shadow-sm hover:border-gray-400 transition-colors ${
                         getStatusColorClasses(localStatuses[transaction.id] || transaction.status || '')
@@ -1978,13 +2012,20 @@ ${mileage}`
                       ))}
                     </select>
                   ) : (
-                    <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
-                      {transaction.status ? 
-                        statusOptions.find(opt => opt.value === transaction.status)?.label || 
-                        transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                        : '-'
-                      }
-                    </span>
+                    <div className="flex flex-col">
+                      <span className={`text-xs font-medium px-2 py-1 rounded-full ${getStatusColor(transaction.status)}`}>
+                        {transaction.status ? 
+                          statusOptions.find(opt => opt.value === transaction.status)?.label || 
+                          transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                          : '-'
+                        }
+                      </span>
+                      {transaction.lastUpdatedBy && (
+                        <span className="text-xs text-gray-500 mt-1">
+                          Last updated by: {transaction.lastUpdatedBy}
+                        </span>
+                      )}
+                    </div>
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
@@ -2165,7 +2206,6 @@ ${mileage}`
                       }}
                       autoFocus
                       onBlur={(e) => {
-                        const currentValue = refValues[transaction.id] !== undefined ? refValues[transaction.id] : (localRefs[transaction.id] !== undefined ? localRefs[transaction.id] : transaction.ref || '')
                         const newValue = e.target.value.trim()
                         const originalValue = localRefs[transaction.id] !== undefined ? localRefs[transaction.id] : (transaction.ref || '')
                         

@@ -1,6 +1,9 @@
 import { prisma } from '@/lib/prisma'
 import VehicleTable from '@/components/VehicleTable'
 import { Transaction, Vehicle, Customer } from '@/generated/prisma'
+import { cookies } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { UserSession } from '@/lib/auth'
 
 interface TransactionWithRelations extends Transaction {
   vehicle: Vehicle
@@ -9,7 +12,23 @@ interface TransactionWithRelations extends Transaction {
 
 export const dynamic = 'force-dynamic'
 
+async function getCurrentUser(): Promise<UserSession | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('user_session')
+    if (!sessionCookie) return null
+    return JSON.parse(sessionCookie.value) as UserSession
+  } catch {
+    return null
+  }
+}
+
 export default async function Home() {
+  const user = await getCurrentUser()
+  
+  if (!user) {
+    redirect('/login')
+  }
   // Get all transactions with vehicle and customer information
   let transactions: TransactionWithRelations[] = []
   
@@ -32,7 +51,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="container mx-auto px-2 sm:px-4 py-2 sm:py-6">
-        <VehicleTable transactions={transactions} />
+        <VehicleTable transactions={transactions} currentUser={user} />
       </div>
     </div>
   )

@@ -1,0 +1,4 @@
+Supabase Connection String:
+
+postgresql://postgres:7uz5yX086Gbj7T0L@db.vohodmdcloloexiwgngd.supabase.co:5432/postgres
+

@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAdmin, handleAdminError } from '@/lib/admin'
+import { cookies } from 'next/headers'
+import { UserSession, isAdmin } from '@/lib/auth'
+
+async function getCurrentUser(): Promise<UserSession | null> {
+  try {
+    const cookieStore = await cookies()
+    const sessionCookie = cookieStore.get('user_session')
+    if (!sessionCookie) return null
+    return JSON.parse(sessionCookie.value) as UserSession
+  } catch {
+    return null
+  }
+}
 
 export async function GET() {
   try {
@@ -33,15 +45,13 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     // Admin kontrolü
-    try {
-      requireAdmin(request)
-    } catch (adminError) {
-      console.error('Admin check failed:', adminError)
-      const adminErrorResponse = handleAdminError(adminError)
-      if (adminErrorResponse) {
-        return NextResponse.json({ error: adminErrorResponse.message }, { status: adminErrorResponse.status })
-      }
-      throw adminError
+    const user = await getCurrentUser()
+    
+    if (!isAdmin(user)) {
+      return NextResponse.json(
+        { error: 'Unauthorized. Admin access required.' },
+        { status: 403 }
+      )
     }
     
     const data = await request.json()

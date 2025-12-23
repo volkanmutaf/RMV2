@@ -1,0 +1,4 @@
+Yeni Supabase Connection String (Transaction Pooler):
+
+postgresql://postgres.vohodmdcloloexiwgngd:Ug705VUScUfh2pSk@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require
+
