@@ -33,7 +33,7 @@ export default async function Home() {
   let transactions: TransactionWithRelations[] = []
   
   try {
-    transactions = await prisma.transaction.findMany({
+    const allTransactions = await prisma.transaction.findMany({
       include: {
         vehicle: true,
         customer: true,
@@ -42,6 +42,9 @@ export default async function Home() {
         date: 'desc'
       }
     })
+    
+    // Filter out archived transactions
+    transactions = allTransactions.filter(t => !t.archived)
   } catch (error) {
     console.error('Database connection error:', error)
     // Return empty array if database is not available

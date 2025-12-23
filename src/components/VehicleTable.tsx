@@ -960,7 +960,7 @@ ${mileage}`
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-100">
-              {transactions.map((transaction, index) => (
+              {sortedTransactions.map((transaction, index) => (
                 <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <div className="text-xs text-gray-900 font-medium">
