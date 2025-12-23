@@ -4,6 +4,18 @@
 -- ============================================
 -- 1. Users Table Updates
 -- ============================================
+-- First, copy email to username if email column exists
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'users' AND column_name = 'email'
+    ) THEN
+        -- Update username from email before dropping email column
+        UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL;
+    END IF;
+END $$;
+
 -- Add password and username to users table
 ALTER TABLE "users" DROP COLUMN IF EXISTS "email";
 ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "username" TEXT;
@@ -39,17 +51,7 @@ ALTER TABLE "transactions" ADD COLUMN IF NOT EXISTS "lastUpdatedAt" TIMESTAMP;
 -- ============================================
 -- 4. Update Existing Users (if needed)
 -- ============================================
--- Update existing users: if email exists, use it as username temporarily
--- Only run if email column exists
-DO $$ 
-BEGIN
-    IF EXISTS (
-        SELECT 1 FROM information_schema.columns 
-        WHERE table_name = 'users' AND column_name = 'email'
-    ) THEN
-        UPDATE "users" SET "username" = "email" WHERE "username" IS NULL AND "email" IS NOT NULL;
-    END IF;
-END $$;
+-- This step is already handled in step 1 above
 
 -- ============================================
 -- Migration Complete!
