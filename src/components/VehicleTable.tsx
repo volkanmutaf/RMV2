@@ -1270,7 +1270,9 @@ ${mileage}`
               </div>
               <div className="bg-slate-600/50 backdrop-blur-sm rounded-lg px-3 py-1">
                 <div className="text-xs text-slate-300">Filtered</div>
-                <div className="text-sm font-semibold text-blue-300">{filteredTransactions.length}</div>
+                <div className="text-sm font-semibold text-blue-300">
+          {filteredTransactions.length} / {transactions.length} transactions
+        </div>
               </div>
             </div>
           </div>
@@ -1830,7 +1832,25 @@ ${mileage}`
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-100">
-            {sortedTransactions.map((transaction, index) => (
+            {sortedTransactions.length === 0 ? (
+              <tr>
+                <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                  {transactions.length === 0 ? (
+                    <div>
+                      <p className="text-lg font-semibold mb-2">No transactions found</p>
+                      <p className="text-sm">Add a new vehicle to get started.</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg font-semibold mb-2">No transactions match your filters</p>
+                      <p className="text-sm">Total transactions: {transactions.length}</p>
+                      <p className="text-xs text-gray-400 mt-1">Try clearing your search or filters</p>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ) : (
+              sortedTransactions.map((transaction, index) => (
               <tr 
                 key={transaction.id}
                 className={`hover:bg-blue-50 transition-colors duration-200 ${
@@ -2327,7 +2347,8 @@ ${mileage}`
                   </div>
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
         </div>
