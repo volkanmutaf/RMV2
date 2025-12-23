@@ -145,8 +145,6 @@ async function main() {
           vehicleId: vehicles[transaction.vehicle].id,
           customerId: customers[transaction.customer].id,
           date: new Date(transaction.date),
-          payment: transaction.payment as any,
-          tax: transaction.tax,
           status: transaction.status as any,
           plate: transaction.plate,
           note: transaction.note,
