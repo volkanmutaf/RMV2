@@ -2169,14 +2169,21 @@ ${mileage}`
             
             {/* Pre-inspection Checkbox */}
             <div className="mt-3 pt-3 border-t border-gray-200">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="relative inline-flex items-center cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={(transaction as any).preInspection || false}
                   onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                  title="Pre-inspection completed"
+                  className="sr-only peer"
                 />
+                <div className="w-5 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
+                  {(transaction as any).preInspection && (
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
+                </div>
+                <span className="ml-2 text-xs text-gray-700 font-medium">Pre-Inspection</span>
               </label>
             </div>
             
@@ -2187,19 +2194,25 @@ ${mileage}`
                   onClick={() => confirmArchive(transaction.id)}
                   className={`w-full ${
                     (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
-                      ? 'bg-green-500 hover:bg-green-600'
-                      : 'bg-orange-500 hover:bg-orange-600'
-                  } text-white px-2 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer`}
+                      ? 'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700'
+                      : 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700'
+                  } text-white px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-center gap-2`}
                   title="Add to archive"
                 >
-                  📁 Archive
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                  <span>Archive</span>
                 </button>
                 <button
                   onClick={() => confirmDelete(transaction.id)}
-                  className="w-full bg-red-500 hover:bg-red-600 text-white px-2 py-1.5 rounded text-xs font-medium transition-colors cursor-pointer"
+                  className="w-full bg-red-500 hover:bg-red-600 active:bg-red-700 text-white px-3 py-2 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-center gap-2"
                   title="Delete permanently"
                 >
-                  🗑️ Delete
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Delete</span>
                 </button>
               </div>
             )}
@@ -2717,58 +2730,70 @@ ${mileage}`
                   )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
                     {/* Pre-inspection Checkbox */}
-                    <input
-                      type="checkbox"
-                      checked={(transaction as any).preInspection || false}
-                      onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
-                      title="Pre-inspection completed"
-                    />
+                    <label className="relative inline-flex items-center cursor-pointer group">
+                      <input
+                        type="checkbox"
+                        checked={(transaction as any).preInspection || false}
+                        onChange={(e) => handlePreInspectionChange(transaction.id, e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-5 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-300 rounded border border-gray-300 peer-checked:bg-blue-600 peer-checked:border-blue-600 transition-all duration-200 flex items-center justify-center">
+                        {(transaction as any).preInspection && (
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                      </div>
+                      <span className="ml-1 text-xs text-gray-500 group-hover:text-gray-700 hidden sm:inline">Pre-Insp</span>
+                    </label>
                     
                     {isAdmin && (
                       <>
-                    <button
-                      onClick={() => confirmArchive(transaction.id)}
+                        <button
+                          onClick={() => confirmArchive(transaction.id)}
                           className={`${
                             (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
-                              ? 'bg-green-500 hover:bg-green-600'
-                              : 'bg-orange-500 hover:bg-orange-600'
-                          } text-white px-1.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer text-[10px]`}
-                      title="Add to archive"
-                    >
-                      📁
-                    </button>
+                              ? 'bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700'
+                              : 'bg-amber-500 hover:bg-amber-600 active:bg-amber-700'
+                          } text-white px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-center gap-1 min-w-[32px]`}
+                          title="Add to archive"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                          </svg>
+                        </button>
                         <button
                           onClick={() => confirmDelete(transaction.id)}
-                          className="bg-red-500 hover:bg-red-600 text-white px-1.5 py-1 rounded text-xs font-medium transition-colors cursor-pointer text-[10px]"
+                          className="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-center gap-1 min-w-[32px]"
                           title="Delete permanently"
                         >
-                          🗑️
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
                         </button>
                       </>
                     )}
-           {(transaction.status === 'TITLE_PENDING' || localStatuses[transaction.id] === 'TITLE_PENDING') && (
-             <div className="flex items-center gap-2">
-               <div 
-                 className={`w-3 h-3 rounded-full ${
-                   (transaction as any).isUrgent ? 'bg-yellow-500' : 'bg-red-500'
-                 }`}
-                 title={(transaction as any).isUrgent ? "Title Pending - Urgent" : "Title Pending - Requires Attention"}
-               >
-               </div>
-               {canEdit && !(transaction as any).isUrgent && (
-                 <button
-                   onClick={() => confirmUrgent(transaction.id)}
-                   className="text-xs font-bold bg-yellow-500 hover:bg-yellow-600 text-white w-6 h-6 rounded transition-colors cursor-pointer flex items-center justify-center"
-                   title="Mark as urgent"
-                 >
-                   U
-                 </button>
-               )}
-             </div>
-           )}
+                    {(transaction.status === 'TITLE_PENDING' || localStatuses[transaction.id] === 'TITLE_PENDING') && (
+                      <div className="flex items-center gap-1.5">
+                        <div 
+                          className={`w-2.5 h-2.5 rounded-full transition-all duration-200 ${
+                            (transaction as any).isUrgent ? 'bg-yellow-400 shadow-sm shadow-yellow-400/50' : 'bg-red-400 shadow-sm shadow-red-400/50'
+                          }`}
+                          title={(transaction as any).isUrgent ? "Title Pending - Urgent" : "Title Pending - Requires Attention"}
+                        />
+                        {canEdit && !(transaction as any).isUrgent && (
+                          <button
+                            onClick={() => confirmUrgent(transaction.id)}
+                            className="bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white px-2.5 py-1.5 rounded-md text-xs font-semibold transition-all duration-200 cursor-pointer shadow-sm hover:shadow-md flex items-center justify-center min-w-[32px]"
+                            title="Mark as urgent"
+                          >
+                            <span className="text-[10px]">U</span>
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </td>
               </tr>
