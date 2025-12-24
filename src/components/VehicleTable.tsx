@@ -197,6 +197,16 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     }
   }
 
+  // Auto-hide copy notification after 3.5 seconds
+  useEffect(() => {
+    if (showCopyNotification) {
+      const timer = setTimeout(() => {
+        setShowCopyNotification(false)
+      }, 3500)
+      return () => clearTimeout(timer)
+    }
+  }, [showCopyNotification])
+
   const parseQuickAddText = (text: string) => {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     
@@ -1048,6 +1058,7 @@ ${mileage}`
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'x-status-change': 'true' // Allow EDITOR to mark as urgent
         },
         body: JSON.stringify({ isUrgent: true }),
       })
