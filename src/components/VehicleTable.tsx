@@ -2732,7 +2732,7 @@ ${mileage}`
                 <td className="px-3 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-1.5">
                     {/* Pre-inspection Checkbox */}
-                    <label className="relative inline-flex items-center cursor-pointer group">
+                    <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={(transaction as any).preInspection || false}
@@ -2746,7 +2746,6 @@ ${mileage}`
                           </svg>
                         )}
                       </div>
-                      <span className="ml-1 text-xs text-gray-500 group-hover:text-gray-700 hidden sm:inline">Pre-Insp</span>
                     </label>
                     
                     {isAdmin && (
