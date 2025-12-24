@@ -2169,7 +2169,7 @@ ${mileage}`
             
             {/* Pre-inspection Checkbox */}
             <div className="mt-3 pt-3 border-t border-gray-200">
-              <label className="relative inline-flex items-center cursor-pointer group">
+              <label className="relative inline-flex items-center cursor-pointer">
                 <input
                   type="checkbox"
                   checked={(transaction as any).preInspection || false}
@@ -2183,7 +2183,6 @@ ${mileage}`
                     </svg>
                   )}
                 </div>
-                <span className="ml-2 text-xs text-gray-700 font-medium">Pre-Inspection</span>
               </label>
             </div>
             
