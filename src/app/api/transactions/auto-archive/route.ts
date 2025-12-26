@@ -7,6 +7,7 @@ import { prisma } from '@/lib/prisma'
  * Cron schedule: Every hour (0 * * * *)
  * 
  * Triggered automatically by Vercel cron jobs
+ * Final test after GitHub-Vercel connection
  */
 export async function POST() {
   try {
