@@ -26,13 +26,32 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [userIP, setUserIP] = useState('')
   const [lastViewTime, setLastViewTime] = useState<number | null>(null)
+  const [showNewNoteNotification, setShowNewNoteNotification] = useState(false)
+  const [newNoteInfo, setNewNoteInfo] = useState<{ name: string; creator: string } | null>(null)
 
   // Fetch notes from API
-  const fetchNotes = async () => {
+  const fetchNotes = async (showNotification = false) => {
     try {
       const response = await fetch('/api/notes')
       if (response.ok) {
         const data = await response.json()
+        const previousNoteIds = new Set(notes.map(n => n.id))
+        const newNotes = data.filter((note: Note) => !previousNoteIds.has(note.id))
+        
+        // If there are new notes and we should show notification
+        if (showNotification && newNotes.length > 0 && notes.length > 0) {
+          const latestNewNote = newNotes[0]
+          setNewNoteInfo({
+            name: latestNewNote.name || 'Untitled',
+            creator: latestNewNote.createdByName || 'Unknown'
+          })
+          setShowNewNoteNotification(true)
+          // Auto-hide after 5 seconds
+          setTimeout(() => {
+            setShowNewNoteNotification(false)
+          }, 5000)
+        }
+        
         setNotes(data)
       }
     } catch (error) {
@@ -70,6 +89,26 @@ export default function Dashboard() {
     }
     
     checkAdminAndIP()
+
+    // Poll for new notes every 10 seconds
+    let pollInterval: NodeJS.Timeout | null = null
+    
+    const startPolling = () => {
+      pollInterval = setInterval(() => {
+        if (!isLoading) {
+          fetchNotes(true) // Show notification for new notes
+        }
+      }, 10000)
+    }
+    
+    startPolling()
+
+    return () => {
+      if (pollInterval) {
+        clearInterval(pollInterval)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Update last view time when notes are loaded
@@ -103,7 +142,7 @@ export default function Dashboard() {
         setNewNote('')
         setNoteName('')
         setShowAddModal(false) // Close modal
-        fetchNotes() // Refresh notes list
+        fetchNotes(false) // Refresh notes list (no notification for own notes)
       } else {
         console.error('Failed to add note')
       }
@@ -243,6 +282,34 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* New Note Notification */}
+        {showNewNoteNotification && newNoteInfo && (
+          <div 
+            className="fixed top-4 right-4 z-50"
+            style={{
+              animation: 'slideInRight 0.3s ease-out'
+            }}
+          >
+            <div className="bg-blue-500 text-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-600">
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">🔔</div>
+                <div className="flex-1">
+                  <div className="font-bold text-lg mb-1">New Note Added!</div>
+                  <div className="text-sm opacity-90">
+                    <span className="font-semibold">{newNoteInfo.name}</span> by <span className="font-semibold">{newNoteInfo.creator}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowNewNoteNotification(false)}
+                  className="text-white hover:text-gray-200 text-xl font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Notes Display */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Notes</h2>
@@ -292,11 +359,9 @@ export default function Dashboard() {
                         {note.content}
                       </div>
                       {/* Show who created the note */}
-                      {note.createdByName && (
-                        <div className="text-xs text-gray-600 mt-1">
-                          Added by: <span className="font-semibold text-gray-800">{note.createdByName}</span>
-                        </div>
-                      )}
+                      <div className="text-xs text-gray-600 mt-1">
+                        Added by: <span className="font-semibold text-gray-800">{note.createdByName || note.name || 'Unknown'}</span>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Complete button - only show if user created the note or is admin */}
