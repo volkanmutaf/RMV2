@@ -2946,12 +2946,12 @@ ${mileage}`
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div className="text-xs text-blue-600 font-semibold mb-2">📝 Current Note:</div>
                     <div className="text-sm text-gray-800 whitespace-pre-wrap mb-2">{currentNote}</div>
-                    {transaction.noteCreatedBy && (
+                    {(transaction as any).noteCreatedBy && (
                       <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-blue-200">
-                        Added by: <span className="font-semibold text-gray-800">{transaction.noteCreatedBy}</span>
-                        {transaction.noteCreatedAt && (
+                        Added by: <span className="font-semibold text-gray-800">{(transaction as any).noteCreatedBy}</span>
+                        {(transaction as any).noteCreatedAt && (
                           <span className="text-gray-500 ml-2">
-                            ({new Date(transaction.noteCreatedAt).toLocaleString('en-US', {
+                            ({new Date((transaction as any).noteCreatedAt).toLocaleString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric',
