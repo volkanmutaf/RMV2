@@ -2378,6 +2378,9 @@ ${mileage}`
                   )}
                 </div>
               </th>
+              <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500">
+                ⏱️ Days
+              </th>
               <th 
                 className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider border-r border-slate-500 cursor-pointer hover:bg-slate-600 transition-colors select-none"
                 onClick={() => handleSort('customer')}
@@ -2443,7 +2446,7 @@ ${mileage}`
           <tbody className="bg-white divide-y divide-gray-100">
             {sortedTransactions.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={11} className="px-4 py-8 text-center text-gray-500">
                   {transactions.length === 0 ? (
                     <div>
                       <p className="text-lg font-semibold mb-2">No transactions found</p>
@@ -2468,8 +2471,82 @@ ${mileage}`
                 }`}
               >
                 <td className="px-3 py-2 whitespace-nowrap">
+                  {editingDate === transaction.id ? (
+                    <input
+                      type="text"
+                      value={dateValues[transaction.id] !== undefined ? dateValues[transaction.id] : formatDate(transaction.date)}
+                      onChange={(e) => {
+                        // Allow MM/DD/YYYY format
+                        let value = e.target.value.replace(/\D/g, '')
+                        if (value.length > 2) value = value.slice(0, 2) + '/' + value.slice(2)
+                        if (value.length > 5) value = value.slice(0, 5) + '/' + value.slice(5, 9)
+                        setDateValues(prev => ({
+                          ...prev,
+                          [transaction.id]: value
+                        }))
+                      }}
+                      onBlur={(e) => {
+                        const newDate = dateValues[transaction.id] || formatDate(transaction.date)
+                        if (newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                          handleDateChange(transaction.id, newDate)
+                        } else {
+                          setEditingDate(null)
+                          setDateValues(prev => {
+                            const updated = {...prev}
+                            delete updated[transaction.id]
+                            return updated
+                          })
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const newDate = dateValues[transaction.id] || formatDate(transaction.date)
+                          if (newDate.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                            handleDateChange(transaction.id, newDate)
+                          }
+                        } else if (e.key === 'Escape') {
+                          setEditingDate(null)
+                          setDateValues(prev => {
+                            const updated = {...prev}
+                            delete updated[transaction.id]
+                            return updated
+                          })
+                        }
+                      }}
+                      className="text-xs text-gray-900 font-medium bg-white border border-gray-300 rounded px-2 py-1 w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      autoFocus
+                      placeholder="MM/DD/YYYY"
+                    />
+                  ) : (
+                    <div 
+                      className="text-xs text-gray-900 font-medium cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
+                      onClick={() => {
+                        setEditingDate(transaction.id)
+                        setDateValues(prev => ({
+                          ...prev,
+                          [transaction.id]: formatDate(transaction.date)
+                        }))
+                      }}
+                      title="Click to edit date"
+                    >
+                      {formatDate(transaction.date)}
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-2 whitespace-nowrap">
                   <div className="text-xs text-gray-900 font-medium">
-                    {formatDate(transaction.date)}
+                    {(() => {
+                      const days = calculateDaysSince(transaction.date)
+                      if (days === 0) {
+                        return <span className="text-green-600 font-semibold">Today</span>
+                      } else if (days === 1) {
+                        return <span className="text-blue-600 font-semibold">1 day</span>
+                      } else if (days < 0) {
+                        return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
+                      } else {
+                        return <span className="text-gray-700">{days} days</span>
+                      }
+                    })()}
                   </div>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
