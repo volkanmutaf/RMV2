@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma'
 /**
  * Auto-archive transactions with PICKED_UP status that have been in that status for 24+ hours
  * This endpoint should be called periodically (e.g., via cron job)
+ * Cron schedule: Every hour (0 * * * *)
  */
 export async function POST() {
   try {
