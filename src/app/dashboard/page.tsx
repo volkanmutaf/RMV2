@@ -275,7 +275,7 @@ export default function Dashboard() {
             🏠 RTS
           </button>
           <button
-            onClick={fetchNotes}
+            onClick={() => fetchNotes(false)}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
           >
             🔄 Refresh
