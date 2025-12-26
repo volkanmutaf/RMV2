@@ -26,32 +26,13 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [userIP, setUserIP] = useState('')
   const [lastViewTime, setLastViewTime] = useState<number | null>(null)
-  const [showNewNoteNotification, setShowNewNoteNotification] = useState(false)
-  const [newNoteInfo, setNewNoteInfo] = useState<{ name: string; creator: string } | null>(null)
 
   // Fetch notes from API
-  const fetchNotes = async (showNotification = false) => {
+  const fetchNotes = async () => {
     try {
       const response = await fetch('/api/notes')
       if (response.ok) {
         const data = await response.json()
-        const previousNoteIds = new Set(notes.map(n => n.id))
-        const newNotes = data.filter((note: Note) => !previousNoteIds.has(note.id))
-        
-        // If there are new notes and we should show notification
-        if (showNotification && newNotes.length > 0 && notes.length > 0) {
-          const latestNewNote = newNotes[0]
-          setNewNoteInfo({
-            name: latestNewNote.name || 'Untitled',
-            creator: latestNewNote.createdByName || 'Unknown'
-          })
-          setShowNewNoteNotification(true)
-          // Auto-hide after 5 seconds
-          setTimeout(() => {
-            setShowNewNoteNotification(false)
-          }, 5000)
-        }
-        
         setNotes(data)
       }
     } catch (error) {
@@ -89,26 +70,6 @@ export default function Dashboard() {
     }
     
     checkAdminAndIP()
-
-    // Poll for new notes every 10 seconds
-    let pollInterval: NodeJS.Timeout | null = null
-    
-    const startPolling = () => {
-      pollInterval = setInterval(() => {
-        if (!isLoading) {
-          fetchNotes(true) // Show notification for new notes
-        }
-      }, 10000)
-    }
-    
-    startPolling()
-
-    return () => {
-      if (pollInterval) {
-        clearInterval(pollInterval)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Update last view time when notes are loaded
@@ -142,7 +103,7 @@ export default function Dashboard() {
         setNewNote('')
         setNoteName('')
         setShowAddModal(false) // Close modal
-        fetchNotes(false) // Refresh notes list (no notification for own notes)
+        fetchNotes() // Refresh notes list
       } else {
         console.error('Failed to add note')
       }
@@ -275,40 +236,12 @@ export default function Dashboard() {
             🏠 RTS
           </button>
           <button
-            onClick={() => fetchNotes(false)}
+            onClick={fetchNotes}
             className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer"
           >
             🔄 Refresh
           </button>
         </div>
-
-        {/* New Note Notification */}
-        {showNewNoteNotification && newNoteInfo && (
-          <div 
-            className="fixed top-4 right-4 z-50"
-            style={{
-              animation: 'slideInRight 0.3s ease-out'
-            }}
-          >
-            <div className="bg-blue-500 text-white rounded-lg shadow-xl p-4 max-w-sm border-2 border-blue-600">
-              <div className="flex items-start gap-3">
-                <div className="text-2xl">🔔</div>
-                <div className="flex-1">
-                  <div className="font-bold text-lg mb-1">New Note Added!</div>
-                  <div className="text-sm opacity-90">
-                    <span className="font-semibold">{newNoteInfo.name}</span> by <span className="font-semibold">{newNoteInfo.creator}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowNewNoteNotification(false)}
-                  className="text-white hover:text-gray-200 text-xl font-bold"
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Notes Display */}
         <div className="bg-white rounded-lg shadow-md border border-gray-200 p-6">
@@ -337,13 +270,6 @@ export default function Dashboard() {
                       : 'bg-red-50 border border-red-200 hover:bg-red-100'
                   }`}
                 >
-                  {/* New note badge */}
-                  {isNew && (
-                    <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg z-10">
-                      1
-                    </div>
-                  )}
-                  
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-3">
                     <div className="flex-1">
                       {note.name && (
@@ -353,10 +279,18 @@ export default function Dashboard() {
                           {note.name}
                         </div>
                       )}
-                      <div className={`text-gray-900 mb-2 ${
-                        note.completed ? 'line-through' : ''
-                      }`}>
-                        {note.content}
+                      {/* Note content with "1" badge on top if new */}
+                      <div className="relative">
+                        {isNew && (
+                          <div className="absolute -top-3 left-0 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold shadow-lg z-10">
+                            1
+                          </div>
+                        )}
+                        <div className={`text-gray-900 mb-2 ${isNew ? 'pt-2' : ''} ${
+                          note.completed ? 'line-through' : ''
+                        }`}>
+                          {note.content}
+                        </div>
                       </div>
                       {/* Show who created the note */}
                       <div className="text-xs text-gray-600 mt-1">
