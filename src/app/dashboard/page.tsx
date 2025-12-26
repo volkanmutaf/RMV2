@@ -79,6 +79,7 @@ export default function Dashboard() {
       localStorage.setItem('notesLastViewTime', now.toString())
       setLastViewTime(now)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [notes])
 
   const handleSubmit = async (e: React.FormEvent) => {
