@@ -79,8 +79,11 @@ export async function PUT(
       }
     }
     
-    // If note is being changed, update lastUpdatedBy and lastUpdatedAt
+    // If note is being changed, update noteCreatedBy and noteCreatedAt
     if (data.note !== undefined && isStatusChange) {
+      updateData.noteCreatedBy = user.username
+      updateData.noteCreatedAt = new Date()
+      // Also update lastUpdatedBy for status changes
       updateData.lastUpdatedBy = user.username
       updateData.lastUpdatedAt = new Date()
     }

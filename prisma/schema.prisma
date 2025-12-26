@@ -68,6 +68,8 @@ model Transaction {
   archivedAt DateTime?
   lastUpdatedBy String?   // Username of user who last updated status
   lastUpdatedAt DateTime? // When status was last updated
+  noteCreatedBy String?   // Username of user who created/updated the note
+  noteCreatedAt DateTime? // When note was created/updated
   isUrgent  Boolean       @default(false) // Mark TITLE_PENDING as urgent
   preInspection Boolean   @default(false) // Pre-inspection completed
   createdAt DateTime      @default(now())

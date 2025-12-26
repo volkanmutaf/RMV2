@@ -2134,15 +2134,44 @@ ${mileage}`
               <div className="mt-3 pt-3 border-t border-gray-200">
                 <span className="text-gray-500 text-xs">Note:</span>
                 <button
-                  onClick={() => openNoteModal(transaction.id)}
-                  className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full ${
+                  onClick={() => {
+                    // Mark note as read when opening modal
+                    if (transaction.note && (transaction as any).noteCreatedAt && currentUser) {
+                      const readKey = `note_read_${transaction.id}_${currentUser.username}`
+                      localStorage.setItem(readKey, new Date((transaction as any).noteCreatedAt).getTime().toString())
+                    }
+                    openNoteModal(transaction.id)
+                  }}
+                  className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
                     transaction.note 
                       ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                   }`}
                   title={transaction.note ? "Click to view/edit note" : "Click to add note"}
                 >
-                  {transaction.note ? '📝 Note' : '➕ No Note'}
+                  {(() => {
+                    // Check if note is new for current user
+                    const isNewNote = transaction.note && 
+                      (transaction as any).noteCreatedAt && 
+                      currentUser && 
+                      (() => {
+                        const readKey = `note_read_${transaction.id}_${currentUser.username}`
+                        const lastReadTime = localStorage.getItem(readKey)
+                        if (!lastReadTime) return true
+                        return new Date((transaction as any).noteCreatedAt).getTime() > parseInt(lastReadTime, 10)
+                      })()
+                    
+                    return (
+                      <span className="relative">
+                        {transaction.note ? '📝 Note' : '➕ No Note'}
+                        {isNewNote && (
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                            1
+                          </span>
+                        )}
+                      </span>
+                    )
+                  })()}
                 </button>
               </div>
             {transaction.lastUpdatedBy && (
@@ -2916,7 +2945,23 @@ ${mileage}`
                 {currentNote ? (
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                     <div className="text-xs text-blue-600 font-semibold mb-2">📝 Current Note:</div>
-                    <div className="text-sm text-gray-800 whitespace-pre-wrap">{currentNote}</div>
+                    <div className="text-sm text-gray-800 whitespace-pre-wrap mb-2">{currentNote}</div>
+                    {transaction.noteCreatedBy && (
+                      <div className="text-xs text-gray-600 mt-2 pt-2 border-t border-blue-200">
+                        Added by: <span className="font-semibold text-gray-800">{transaction.noteCreatedBy}</span>
+                        {transaction.noteCreatedAt && (
+                          <span className="text-gray-500 ml-2">
+                            ({new Date(transaction.noteCreatedAt).toLocaleString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })})
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4 text-center">
