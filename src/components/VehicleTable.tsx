@@ -22,11 +22,37 @@ interface VehicleTableProps {
 
 export default function VehicleTable({ transactions: initialTransactions, currentUser }: VehicleTableProps) {
   const [transactions, setTransactions] = useState<TransactionWithRelations[]>(initialTransactions)
+  const [readNotes, setReadNotes] = useState<Set<string>>(new Set())
+  
+  // Load read notes from localStorage on mount
+  useEffect(() => {
+    if (currentUser) {
+      const readSet = new Set<string>()
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(`note_read_`) && key.endsWith(`_${currentUser.username}`)) {
+          readSet.add(key)
+        }
+      }
+      setReadNotes(readSet)
+    }
+  }, [currentUser])
   
   // Update transactions when prop changes
   useEffect(() => {
     setTransactions(initialTransactions)
-  }, [initialTransactions])
+    // Force re-render to update badges
+    if (currentUser) {
+      const readSet = new Set<string>()
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i)
+        if (key && key.startsWith(`note_read_`) && key.endsWith(`_${currentUser.username}`)) {
+          readSet.add(key)
+        }
+      }
+      setReadNotes(readSet)
+    }
+  }, [initialTransactions, currentUser])
   
   // Debug: Log transactions
   useEffect(() => {
@@ -911,11 +937,23 @@ ${mileage}`
       const refreshResponse = await fetch('/api/transactions')
       if (refreshResponse.ok) {
         const data = await refreshResponse.json()
-        setTransactions(data.filter((t: TransactionWithRelations) => !t.archived))
+        const updatedTransactions = data.filter((t: TransactionWithRelations) => !t.archived)
+        setTransactions(updatedTransactions)
         setLocalNotes(prev => ({
           ...prev,
           [transactionId]: newNote
         }))
+        
+        // If current user saved the note, mark it as read
+        if (currentUser && newNote) {
+          const updatedTransaction = updatedTransactions.find((t: TransactionWithRelations) => t.id === transactionId)
+          if (updatedTransaction && (updatedTransaction as any).noteCreatedAt) {
+            const readKey = `note_read_${transactionId}_${currentUser.username}`
+            const noteCreatedAtTime = new Date((updatedTransaction as any).noteCreatedAt).getTime().toString()
+            localStorage.setItem(readKey, noteCreatedAtTime)
+            setReadNotes(prev => new Set(prev).add(readKey))
+          }
+        }
       }
       
       showNotificationMessage('Note saved successfully!', 'success')
@@ -2138,7 +2176,9 @@ ${mileage}`
                     // Mark note as read when opening modal
                     if (transaction.note && (transaction as any).noteCreatedAt && currentUser) {
                       const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                      localStorage.setItem(readKey, new Date((transaction as any).noteCreatedAt).getTime().toString())
+                      const noteCreatedAtTime = new Date((transaction as any).noteCreatedAt).getTime().toString()
+                      localStorage.setItem(readKey, noteCreatedAtTime)
+                      setReadNotes(prev => new Set(prev).add(readKey))
                     }
                     openNoteModal(transaction.id)
                   }}
@@ -2151,21 +2191,30 @@ ${mileage}`
                 >
                   {(() => {
                     // Check if note is new for current user
-                    const isNewNote = transaction.note && 
-                      (transaction as any).noteCreatedAt && 
-                      currentUser && 
-                      (() => {
-                        const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                        const lastReadTime = localStorage.getItem(readKey)
-                        if (!lastReadTime) return true
-                        return new Date((transaction as any).noteCreatedAt).getTime() > parseInt(lastReadTime, 10)
-                      })()
+                    if (!transaction.note || !currentUser) {
+                      return <span>{transaction.note ? '📝 Note' : '➕ No Note'}</span>
+                    }
+                    
+                    const noteCreatedAt = (transaction as any).noteCreatedAt
+                    if (!noteCreatedAt) {
+                      return <span>📝 Note</span>
+                    }
+                    
+                    const readKey = `note_read_${transaction.id}_${currentUser.username}`
+                    const isRead = readNotes.has(readKey) || localStorage.getItem(readKey) !== null
+                    
+                    // Double check: compare timestamps
+                    const noteTime = new Date(noteCreatedAt).getTime()
+                    const lastReadTimeStr = localStorage.getItem(readKey)
+                    const isActuallyRead = lastReadTimeStr && parseInt(lastReadTimeStr, 10) >= noteTime
+                    
+                    const isNewNote = !isActuallyRead
                     
                     return (
-                      <span className="relative">
+                      <span className="relative inline-block w-full">
                         {transaction.note ? '📝 Note' : '➕ No Note'}
                         {isNewNote && (
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
                             1
                           </span>
                         )}
