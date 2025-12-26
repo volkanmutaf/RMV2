@@ -1136,6 +1136,16 @@ ${mileage}`
     })
   }
 
+  const calculateDaysSince = (date: Date) => {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const transactionDate = new Date(date)
+    transactionDate.setHours(0, 0, 0, 0)
+    const diffTime = today.getTime() - transactionDate.getTime()
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+    return diffDays
+  }
+
   const formatVehicle = (vehicle: Vehicle) => {
     return `${vehicle.year} ${vehicle.make} ${vehicle.model}`
   }
@@ -1232,6 +1242,7 @@ ${mileage}`
             <thead className="bg-gradient-to-r from-blue-600 to-blue-700">
               <tr>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Date</th>
+                <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Days</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Customer</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">Vehicle</th>
                 <th className="px-3 py-2 text-left text-xs font-semibold text-white uppercase tracking-wider">VIN</th>
@@ -1309,6 +1320,22 @@ ${mileage}`
                         {formatDate(transaction.date)}
                       </div>
                     )}
+                  </td>
+                  <td className="px-3 py-2 whitespace-nowrap">
+                    <div className="text-xs text-gray-900 font-medium">
+                      {(() => {
+                        const days = calculateDaysSince(transaction.date)
+                        if (days === 0) {
+                          return <span className="text-green-600 font-semibold">Today</span>
+                        } else if (days === 1) {
+                          return <span className="text-blue-600 font-semibold">1 day</span>
+                        } else if (days < 0) {
+                          return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
+                        } else {
+                          return <span className="text-gray-700">{days} days</span>
+                        }
+                      })()}
+                    </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     <div className="text-xs text-gray-900 font-medium">
@@ -2040,6 +2067,20 @@ ${mileage}`
               </div>
               <div className="text-right">
                 <div className="text-xs text-gray-500">{formatDate(transaction.date)}</div>
+                <div className="text-xs mt-1">
+                  {(() => {
+                    const days = calculateDaysSince(transaction.date)
+                    if (days === 0) {
+                      return <span className="text-green-600 font-semibold">Today</span>
+                    } else if (days === 1) {
+                      return <span className="text-blue-600 font-semibold">1 day</span>
+                    } else if (days < 0) {
+                      return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
+                    } else {
+                      return <span className="text-gray-700">{days} days</span>
+                    }
+                  })()}
+                </div>
               </div>
             </div>
             
