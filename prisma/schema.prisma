@@ -131,6 +131,7 @@ model Deal {
   dealNumber  String    // 4-digit number
   type        DealType
   amount      Float?    // Admin can edit this
+  insurance   String?   // Optional insurance information
   createdById String
   readByAdmin Boolean   @default(false) // Track if admin has seen this deal
   createdAt   DateTime  @default(now())

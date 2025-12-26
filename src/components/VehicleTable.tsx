@@ -100,6 +100,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [showAddDealModal, setShowAddDealModal] = useState(false)
   const [dealNumber, setDealNumber] = useState('')
   const [dealType, setDealType] = useState<'DEPOSIT' | 'DEAL' | ''>('')
+  const [dealInsurance, setDealInsurance] = useState('')
   const [editingVehicle, setEditingVehicle] = useState<string | null>(null)
   const [vehicleNames, setVehicleNames] = useState<{[key: string]: string}>({})
 
@@ -3213,6 +3214,7 @@ ${mileage}`
                     setShowAddDealModal(false)
                     setDealNumber('')
                     setDealType('')
+                    setDealInsurance('')
                   }}
                   className="text-gray-500 hover:text-gray-700 text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer"
                 >
@@ -3237,7 +3239,7 @@ ${mileage}`
                 />
               </div>
               
-              <div className="mb-6">
+              <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Type *
                 </label>
@@ -3267,12 +3269,26 @@ ${mileage}`
                 </div>
               </div>
               
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Insurance (Optional)
+                </label>
+                <input
+                  type="text"
+                  value={dealInsurance}
+                  onChange={(e) => setDealInsurance(e.target.value)}
+                  placeholder="Enter insurance information..."
+                  className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                />
+              </div>
+              
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => {
                     setShowAddDealModal(false)
                     setDealNumber('')
                     setDealType('')
+                    setDealInsurance('')
                   }}
                   className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation cursor-pointer"
                 >
@@ -3298,6 +3314,7 @@ ${mileage}`
                         body: JSON.stringify({
                           dealNumber,
                           type: dealType,
+                          insurance: dealInsurance.trim() || null,
                         }),
                       })
                       
@@ -3310,6 +3327,7 @@ ${mileage}`
                       setShowAddDealModal(false)
                       setDealNumber('')
                       setDealType('')
+                      setDealInsurance('')
                     } catch (error) {
                       console.error('Failed to create deal:', error)
                       showNotificationMessage(error instanceof Error ? error.message : 'Failed to create deal', 'error')

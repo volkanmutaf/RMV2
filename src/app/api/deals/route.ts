@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    const { dealNumber, type } = await request.json()
+    const { dealNumber, type, insurance } = await request.json()
     
     if (!dealNumber || dealNumber.length !== 4 || !/^\d{4}$/.test(dealNumber)) {
       return NextResponse.json({ error: 'Deal number must be exactly 4 digits' }, { status: 400 })
@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
       data: {
         dealNumber,
         type,
+        insurance: insurance && insurance.trim() !== '' ? insurance.trim() : null,
         createdById: dbUser.id,
       },
       include: {
