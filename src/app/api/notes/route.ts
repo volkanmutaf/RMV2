@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
       data: {
         content: content.trim(),
         name: name ? name.trim() : null,
+        createdByName: name ? name.trim() : null,
         createdByIP: clientIP
       }
     })

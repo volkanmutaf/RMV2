@@ -8,6 +8,7 @@ interface Note {
   content: string
   completed: boolean
   createdByIP?: string
+  createdByName?: string
   createdAt: Date
   updatedAt: Date
 }
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [editContent, setEditContent] = useState('')
   const [isAdmin, setIsAdmin] = useState(false)
   const [userIP, setUserIP] = useState('')
+  const [lastViewTime, setLastViewTime] = useState<number | null>(null)
 
   // Fetch notes from API
   const fetchNotes = async () => {
@@ -41,6 +43,17 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
+    // Load last view time from localStorage
+    const savedLastViewTime = localStorage.getItem('notesLastViewTime')
+    if (savedLastViewTime) {
+      setLastViewTime(parseInt(savedLastViewTime, 10))
+    } else {
+      // First visit - set to current time so no notes show as new initially
+      const now = Date.now()
+      setLastViewTime(now)
+      localStorage.setItem('notesLastViewTime', now.toString())
+    }
+
     fetchNotes()
     
     // Admin kontrolü ve IP bilgisi
@@ -58,6 +71,15 @@ export default function Dashboard() {
     
     checkAdminAndIP()
   }, [])
+
+  // Update last view time when notes are loaded
+  useEffect(() => {
+    if (notes.length > 0 && lastViewTime !== null) {
+      const now = Date.now()
+      localStorage.setItem('notesLastViewTime', now.toString())
+      setLastViewTime(now)
+    }
+  }, [notes])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -234,15 +256,26 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="space-y-4">
-              {notes.map((note) => (
+              {notes.map((note) => {
+                const noteCreatedAt = new Date(note.createdAt).getTime()
+                const isNew = lastViewTime !== null && noteCreatedAt > lastViewTime
+                
+                return (
                 <div
                   key={note.id}
-                  className={`rounded-lg p-4 transition-colors ${
+                  className={`rounded-lg p-4 transition-colors relative ${
                     note.completed 
                       ? 'bg-green-50 border border-green-200 hover:bg-green-100' 
                       : 'bg-red-50 border border-red-200 hover:bg-red-100'
                   }`}
                 >
+                  {/* New note badge */}
+                  {isNew && (
+                    <div className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold shadow-lg z-10">
+                      1
+                    </div>
+                  )}
+                  
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-2 gap-3">
                     <div className="flex-1">
                       {note.name && (
@@ -257,6 +290,12 @@ export default function Dashboard() {
                       }`}>
                         {note.content}
                       </div>
+                      {/* Show who created the note */}
+                      {note.createdByName && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          Added by: <span className="font-semibold text-gray-800">{note.createdByName}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       {/* Complete button - only show if user created the note or is admin */}
@@ -308,7 +347,8 @@ export default function Dashboard() {
                           {formatDate(note.updatedAt > note.createdAt ? note.updatedAt : note.createdAt)}
                         </div>
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </div>

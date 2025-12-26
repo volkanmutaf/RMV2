@@ -106,13 +106,14 @@ enum VehicleStatus {
 
 // Note model for dashboard notes
 model Note {
-  id          String   @id @default(cuid())
-  name        String?
-  content     String
-  completed   Boolean  @default(false)
-  createdByIP String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  name          String?
+  content       String
+  completed     Boolean  @default(false)
+  createdByIP   String?
+  createdByName String?  // Name of user who created the note
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
   
   @@map("notes")
 }
