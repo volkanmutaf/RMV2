@@ -547,6 +547,19 @@ ${mileage}`
         })
         
         if (response.ok) {
+          const newTransaction = await response.json()
+          
+          // Add new transaction to the list without page reload
+          setTransactions(prev => {
+            // Check if transaction already exists (avoid duplicates)
+            const exists = prev.find(t => t.id === newTransaction.id)
+            if (exists) {
+              return prev
+            }
+            // Add new transaction at the beginning
+            return [newTransaction, ...prev]
+          })
+          
           // Show success notification
           setSuccessMessage('Customer and Vehicle Added Successfully!')
           setShowSuccessNotification(true)
@@ -556,11 +569,6 @@ ${mileage}`
           setParsedData(null)
           setEditableData(null)
           setShowQuickAdd(false)
-          
-          // Refresh the page to show new data
-          setTimeout(() => {
-          window.location.reload()
-          }, 1000) // Small delay to show notification
         } else {
           const errorData = await response.json()
           if (response.status === 400 && errorData.error === 'VIN number already exists') {
