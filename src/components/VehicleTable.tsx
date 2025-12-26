@@ -2197,22 +2197,33 @@ ${mileage}`
                     
                     const noteCreatedAt = (transaction as any).noteCreatedAt
                     if (!noteCreatedAt) {
+                      // Old note without createdAt - don't show badge
                       return <span>📝 Note</span>
                     }
                     
                     const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                    const isRead = readNotes.has(readKey) || localStorage.getItem(readKey) !== null
-                    
-                    // Double check: compare timestamps
-                    const noteTime = new Date(noteCreatedAt).getTime()
                     const lastReadTimeStr = localStorage.getItem(readKey)
-                    const isActuallyRead = lastReadTimeStr && parseInt(lastReadTimeStr, 10) >= noteTime
                     
-                    const isNewNote = !isActuallyRead
+                    // If never read, show badge
+                    if (!lastReadTimeStr) {
+                      return (
+                        <span className="relative inline-block w-full">
+                          📝 Note
+                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
+                            1
+                          </span>
+                        </span>
+                      )
+                    }
+                    
+                    // Compare timestamps
+                    const noteTime = new Date(noteCreatedAt).getTime()
+                    const lastReadTime = parseInt(lastReadTimeStr, 10)
+                    const isNewNote = noteTime > lastReadTime
                     
                     return (
                       <span className="relative inline-block w-full">
-                        {transaction.note ? '📝 Note' : '➕ No Note'}
+                        📝 Note
                         {isNewNote && (
                           <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
                             1
