@@ -42,12 +42,6 @@ export default function MechanicPage() {
     fetchCurrentUser()
   }, [])
 
-  useEffect(() => {
-    if (currentUser) {
-      fetchMechanicNotes()
-    }
-  }, [showArchived, currentUser])
-
   const fetchCurrentUser = async () => {
     try {
       const response = await fetch('/api/auth/me')
@@ -258,6 +252,11 @@ export default function MechanicPage() {
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex-1">
+                    {note.noteArchived && (
+                      <div className="mb-2 bg-orange-100 border border-orange-300 rounded px-2 py-1">
+                        <span className="text-xs font-bold text-orange-700">⚠️ ARCHIVE</span>
+                      </div>
+                    )}
                     <div className="text-xs font-semibold text-gray-600 mb-1">
                       {formatDate(note.noteCreatedAt)}
                     </div>
