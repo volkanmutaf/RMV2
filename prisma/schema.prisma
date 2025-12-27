@@ -84,7 +84,8 @@ model Transaction {
 // Enum values
 enum UserRole {
   ADMIN
-  EDITOR  // Can only change status
+  MANAGER // Can view/edit everything except users and add vehicle, can archive
+  EDITOR  // Can only change status, cannot archive
   VIEWER  // Read only
 }
 

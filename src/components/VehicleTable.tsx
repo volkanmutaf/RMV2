@@ -12,7 +12,7 @@ interface UserSession {
   id: string
   username: string
   name: string
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
 }
 
 interface VehicleTableProps {
@@ -61,7 +61,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   }, [transactions])
 
   const [isAdmin, setIsAdmin] = useState(false) // Start as non-admin
-  const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN or EDITOR)
+  const [isManager, setIsManager] = useState(false) // Manager role
+  const [canEdit, setCanEdit] = useState(false) // Can edit (ADMIN, MANAGER, or EDITOR)
+  const [canArchive, setCanArchive] = useState(false) // Can archive (ADMIN or MANAGER)
   const [editingPlate, setEditingPlate] = useState<string | null>(null)
   const [editingRef, setEditingRef] = useState<string | null>(null)
   const [editingContact, setEditingContact] = useState<string | null>(null)
@@ -95,9 +97,6 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [showTestModal, setShowTestModal] = useState(false)
   const [testInput, setTestInput] = useState('')
   const [testOutput, setTestOutput] = useState('')
-  const [showExcelParseModal, setShowExcelParseModal] = useState(false)
-  const [excelParseInput, setExcelParseInput] = useState('')
-  const [excelParseOutput, setExcelParseOutput] = useState('')
   const [showAddDealModal, setShowAddDealModal] = useState(false)
   const [dealNumber, setDealNumber] = useState('')
   const [dealType, setDealType] = useState<'DEPOSIT' | 'DEAL' | ''>('')
@@ -121,7 +120,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   useEffect(() => {
     if (currentUser) {
       setIsAdmin(currentUser.role === 'ADMIN')
-      setCanEdit(currentUser.role === 'ADMIN' || currentUser.role === 'EDITOR')
+      setIsManager(currentUser.role === 'MANAGER')
+      setCanEdit(currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER' || currentUser.role === 'EDITOR')
+      setCanArchive(currentUser.role === 'ADMIN' || currentUser.role === 'MANAGER')
     }
   }, [currentUser])
   const [quickAddText, setQuickAddText] = useState('')
@@ -373,140 +374,7 @@ ${mileage}`
     }
   }, [testInput])
 
-  // Parse data for Excel format
-  const parseExcelFormat = (text: string) => {
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-    
-    let vehicle = ''
-    let vin = ''
-    let vinLast8 = ''
-    let customer = ''
-    let contact = ''
-    let ref = ''
-    
-    // Parse vehicle (first line - year make model)
-    if (lines.length > 0) {
-      vehicle = lines[0]
-    }
-    
-    // Parse VIN (look for 17-character alphanumeric string)
-    const vinMatch = text.match(/\b[A-HJ-NPR-Z0-9]{17}\b/)
-    if (vinMatch) {
-      vin = vinMatch[0]
-      vinLast8 = vin.slice(-8) // Last 8 digits
-    }
-    
-    // Parse Stock # for Ref
-    const stockMatch = text.match(/Stock\s*#\s*(\d+)/i)
-    if (stockMatch) {
-      ref = stockMatch[1]
-    }
-    
-    // Parse customer name (look for name pattern - usually after VIN/stock info)
-    // First, find VIN line index to search after it
-    let vinLineIndex = -1
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].match(/\b[A-HJ-NPR-Z0-9]{17}\b/)) {
-        vinLineIndex = i
-        break
-      }
-    }
-    
-    // Start searching from after VIN line (or from beginning if VIN not found)
-    const startIndex = vinLineIndex >= 0 ? vinLineIndex + 1 : 0
-    
-    for (let i = startIndex; i < lines.length; i++) {
-      const line = lines[i]
-      // Skip lines that look like vehicle info, VIN, stock, mileage, etc.
-      if (!line.match(/^\d{4}\s/) && // Not year
-          !line.match(/^[A-HJ-NPR-Z0-9]{17}$/) && // Not VIN (exact match)
-          !line.match(/\b[A-HJ-NPR-Z0-9]{17}\b/) && // Not VIN (anywhere in line)
-          !line.match(/Stock\s*#/) && // Not stock number
-          !line.match(/\d+\s*days/) && // Not days
-          !line.match(/\d+,\d+\s*miles/) && // Not mileage
-          !line.match(/^\d+$/) && // Not just numbers
-          !line.match(/\([0-9\s\-\(\)]+\)/) && // Not phone number
-          !line.match(/@/) && // Not email
-          !line.match(/^\d+\s+\w+/) && // Not address pattern
-          !line.match(/Sport Utility/) && // Not vehicle description
-          !line.match(/4D/) && // Not vehicle description
-          !line.match(/Pre-Qual/) && // Not status
-          !line.match(/Credit Report/) && // Not report type
-          !line.match(/TurboPass Report/) && // Not report type
-          !line.match(/Class:\s*\d+/) && // Not class
-          !line.match(/^\d+\s+\w+\s+St/) && // Not street address
-          !line.match(/,\s*[A-Z]{2}\s+\d{5}/) && // Not address with state zip
-          line.length > 2 && line.length < 50 && // Reasonable name length
-          /^[A-Z][a-z]+\s+[A-Z][a-z]+/.test(line)) { // Looks like "FirstName LastName"
-        customer = line
-        break
-      }
-    }
-    
-    // Parse contact (full phone number) - look for phone number pattern
-    // Pattern: (XXX) XXX-XXXX or variations
-    // Try to find the line with phone number first
-    for (const line of lines) {
-      // Check for common phone number patterns
-      if (line.match(/\(\d{3}\)\s*\d{3}-\d{4}/)) {  // (617) 794-0607
-        contact = line.trim()
-        break
-      } else if (line.match(/\(\d{3}\)\s*\d{3}\s*\d{4}/)) {  // (617) 794 0607
-        contact = line.trim()
-        break
-      } else if (line.match(/\d{3}-\d{3}-\d{4}/)) {  // 617-794-0607
-        contact = line.trim()
-        break
-      } else if (line.match(/\(?\d{3}\)?\s*-?\s*\d{3}\s*-?\s*\d{4}/)) {  // Other variations
-        contact = line.trim()
-        break
-      }
-    }
-    
-    // If not found in lines, try to find in full text
-    if (!contact) {
-      const phonePatterns = [
-        /\(\d{3}\)\s*\d{3}-\d{4}/,                 // (617) 794-0607
-        /\(\d{3}\)\s*\d{3}\s*\d{4}/,                // (617) 794 0607
-        /\d{3}-\d{3}-\d{4}/,                       // 617-794-0607
-        /\(?\d{3}\)?\s*-?\s*\d{3}\s*-?\s*\d{4}/    // Other variations
-      ]
-      
-      for (const pattern of phonePatterns) {
-        const phoneMatch = text.match(pattern)
-        if (phoneMatch) {
-          contact = phoneMatch[0].trim()
-          break
-        }
-      }
-    }
-    
-    // Get current date in MM/DD/YYYY format
-    const today = new Date()
-    const date = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`
-    
-    // Create Excel row format: Customer | Vehicle | Date | VIN | VIN Last 8 | Contact
-    // Using tab-separated format for easy copy-paste to Excel
-    const excelRow = [
-      customer || '',      // Customer
-      vehicle || '',       // Vehicle
-      date,                // Date
-      vin || '',           // VIN
-      vinLast8 || '',      // VIN Last 8 digits
-      contact || ''        // Contact
-    ].join('\t') // Tab-separated for Excel
-    
-    return excelRow
-  }
 
-  // Update Excel parse output when input changes
-  useEffect(() => {
-    if (excelParseInput) {
-      setExcelParseOutput(parseExcelFormat(excelParseInput))
-    } else {
-      setExcelParseOutput('')
-    }
-  }, [excelParseInput])
 
   const handleQuickAddSubmit = async () => {
     if (editableData) {
@@ -1570,17 +1438,19 @@ ${mileage}`
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && (
                       <div className="flex gap-1">
-                      <button
-                        onClick={() => confirmArchive(transaction.id)}
-                          className={`${
-                            (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
-                              ? 'bg-green-500 hover:bg-green-600'
-                              : 'bg-orange-500 hover:bg-orange-600'
-                          } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
-                        title="Add to archive"
-                      >
-                        📁
-                      </button>
+                      {canArchive && (
+                        <button
+                          onClick={() => confirmArchive(transaction.id)}
+                            className={`${
+                              (transaction.status === 'TITLE_REQUESTED' || localStatuses[transaction.id] === 'TITLE_REQUESTED')
+                                ? 'bg-green-500 hover:bg-green-600'
+                                : 'bg-orange-500 hover:bg-orange-600'
+                            } text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer`}
+                          title="Add to archive"
+                        >
+                          📁
+                        </button>
+                      )}
                         <button
                           onClick={() => confirmDelete(transaction.id)}
                           className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer"
@@ -1834,18 +1704,12 @@ ${mileage}`
                 onClick={() => setShowTestModal(true)}
                   className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
               >
-                  🧪 Test Parse
-              </button>
-              <button
-                onClick={() => setShowExcelParseModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
-              >
-                  📊 Excel Parse
+                  🏷️ Key Label
               </button>
               </>
             )}
             </div>
-          {isAdmin && (
+          {(isAdmin || isManager) && (
             <a
               href="/deals"
               className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer inline-block text-center"
@@ -1880,7 +1744,7 @@ ${mileage}`
                     👥 Users
                   </button>
                 )}
-            {isAdmin && (
+            {(isAdmin || isManager) && (
               <button
                 onClick={() => window.open('/archive', '_blank')}
                 className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
@@ -2357,7 +2221,7 @@ ${mileage}`
             </div>
             
             {/* Archive and Delete Buttons */}
-            {isAdmin && (
+            {canArchive && (
               <div className="mt-3 pt-3 border-t border-gray-200 space-y-2">
                 <button
                   onClick={() => confirmArchive(transaction.id)}
@@ -3290,7 +3154,7 @@ ${mileage}`
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Test Parse</h3>
+                <h3 className="text-xl font-bold text-gray-900">Key Label</h3>
                 <button
                   onClick={() => setShowTestModal(false)}
                   className="text-gray-500 hover:text-gray-700 text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer"
@@ -3508,109 +3372,6 @@ ${mileage}`
         </div>
       )}
 
-      {/* Excel Parse Modal */}
-      {showExcelParseModal && (
-        <div className="fixed inset-0 backdrop-blur-md flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-gray-900">Excel Parse</h3>
-                <button
-                  onClick={() => setShowExcelParseModal(false)}
-                  className="text-gray-500 hover:text-gray-700 text-2xl font-bold hover:bg-gray-100 rounded-full w-8 h-8 flex items-center justify-center transition-all cursor-pointer"
-                >
-                  ×
-                </button>
-              </div>
-              
-              <div className="mb-6">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Vehicle Information
-                </label>
-                <textarea
-                  value={excelParseInput}
-                  onChange={(e) => setExcelParseInput(e.target.value)}
-                  placeholder="Paste vehicle information here..."
-                  className="w-full h-48 p-4 border-2 border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
-                  style={{ lineHeight: '1.5' }}
-                />
-              </div>
-              
-              {/* Excel Output Section */}
-              {excelParseOutput && (
-                <div className="mb-6">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Excel Row (Tab-separated, ready to paste):
-                  </label>
-                  <div className="mb-2 p-2 bg-gray-50 rounded text-xs text-gray-600">
-                    Format: Customer | Vehicle | Date | VIN | VIN Last 8 | Contact
-                  </div>
-                  <div className="border-2 border-green-500 rounded-lg p-4 bg-green-50">
-                    <textarea
-                      value={excelParseOutput}
-                      onChange={(e) => setExcelParseOutput(e.target.value)}
-                      className="w-full p-3 border-2 border-gray-300 rounded-lg text-sm text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 font-mono resize-none"
-                      placeholder="Excel row will appear here..."
-                      rows={1}
-                      style={{ 
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        whiteSpace: 'nowrap',
-                        minHeight: '48px'
-                      }}
-                    />
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => {
-                        try {
-                          if (navigator.clipboard && navigator.clipboard.writeText) {
-                            navigator.clipboard.writeText(excelParseOutput)
-                            alert('Copied to clipboard! You can now paste it into Excel.')
-                          } else {
-                            // Fallback for older browsers or non-HTTPS
-                            const textArea = document.createElement('textarea')
-                            textArea.value = excelParseOutput
-                            document.body.appendChild(textArea)
-                            textArea.select()
-                            document.execCommand('copy')
-                            document.body.removeChild(textArea)
-                            alert('Copied to clipboard! You can now paste it into Excel.')
-                          }
-                        } catch (err) {
-                          console.error('Failed to copy: ', err)
-                          alert(`Failed to copy to clipboard. Here's the text:\n\n${excelParseOutput}`)
-                        }
-                      }}
-                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                    >
-                      📋 Copy to Clipboard
-                    </button>
-                    <button
-                      onClick={() => {
-                        setExcelParseInput('')
-                        setExcelParseOutput('')
-                      }}
-                      className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setShowExcelParseModal(false)}
-                  className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-3 rounded-lg text-sm font-semibold transition-all duration-200 shadow-md hover:shadow-lg touch-manipulation cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
