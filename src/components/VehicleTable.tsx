@@ -2207,9 +2207,14 @@ ${mileage}`
                     )
                   })()}
                 </button>
-                {hoveredNoteId === transaction.id && transaction.note && (
+                {hoveredNoteId === transaction.id && transaction.note && !((transaction as any).noteType === 'MECHANIC' && (transaction as any).noteApproved === true) && (
                   <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                    <div className="text-xs font-semibold text-blue-600 mb-2">📝 Note Preview:</div>
+                    <div className="text-xs font-semibold text-blue-600 mb-2">
+                      📝 Note Preview: 
+                      <span className="ml-2 text-xs font-normal text-gray-600">
+                        ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
+                      </span>
+                    </div>
                     <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
                       {transaction.note}
                     </div>
