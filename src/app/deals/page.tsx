@@ -28,7 +28,7 @@ interface UserSession {
   id: string
   username: string
   name: string
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
 }
 
 export default function DealsPage() {
@@ -45,7 +45,7 @@ export default function DealsPage() {
     fetch('/api/auth/me')
       .then(res => res.json())
       .then(data => {
-        if (!data || !data.user || data.user.role !== 'ADMIN') {
+        if (!data || !data.user || (data.user.role !== 'ADMIN' && data.user.role !== 'MANAGER')) {
           router.push('/')
           return
         }

@@ -7,7 +7,7 @@ interface User {
   id: string
   username: string
   name: string
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
   createdAt: string
 }
 
@@ -21,7 +21,7 @@ export default function UsersPage() {
     username: '',
     password: '',
     name: '',
-    role: 'VIEWER' as 'ADMIN' | 'EDITOR' | 'VIEWER'
+    role: 'VIEWER' as 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
   })
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -30,7 +30,7 @@ export default function UsersPage() {
     username: '',
     password: '',
     name: '',
-    role: 'VIEWER' as 'ADMIN' | 'EDITOR' | 'VIEWER'
+    role: 'VIEWER' as 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
   })
 
   useEffect(() => {
@@ -294,6 +294,7 @@ export default function UsersPage() {
                   >
                     <option value="VIEWER">Viewer (Read Only)</option>
                     <option value="EDITOR">Editor (Can Change Status)</option>
+                    <option value="MANAGER">Manager (Can View/Edit, Archive, No Users/Add Vehicle)</option>
                     <option value="ADMIN">Admin (Full Access)</option>
                   </select>
                 </div>
@@ -371,6 +372,7 @@ export default function UsersPage() {
                     >
                       <option value="VIEWER">Viewer (Read Only)</option>
                       <option value="EDITOR">Editor (Can Change Status)</option>
+                      <option value="MANAGER">Manager (Can View/Edit, Archive, No Users/Add Vehicle)</option>
                       <option value="ADMIN">Admin (Full Access)</option>
                     </select>
                   </div>
@@ -416,6 +418,7 @@ export default function UsersPage() {
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                        user.role === 'MANAGER' ? 'bg-purple-100 text-purple-800' :
                         user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>

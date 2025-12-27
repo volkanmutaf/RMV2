@@ -74,8 +74,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
     
-    // Only admin can view all deals
-    if (user.role !== 'ADMIN') {
+    // Only admin and manager can view all deals
+    if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
     

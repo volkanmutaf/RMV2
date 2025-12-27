@@ -5,7 +5,7 @@ export interface UserSession {
   id: string
   username: string
   name: string
-  role: 'ADMIN' | 'EDITOR' | 'VIEWER'
+  role: 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
 }
 
 // Hash password
@@ -38,7 +38,7 @@ export async function authenticateUser(username: string, password: string): Prom
       id: user.id,
       username: user.username,
       name: user.name,
-      role: user.role as 'ADMIN' | 'EDITOR' | 'VIEWER'
+      role: user.role as 'ADMIN' | 'MANAGER' | 'EDITOR' | 'VIEWER'
     }
   } catch (error) {
     console.error('Authentication error:', error)
@@ -46,10 +46,10 @@ export async function authenticateUser(username: string, password: string): Prom
   }
 }
 
-// Check if user can edit (ADMIN or EDITOR)
+// Check if user can edit (ADMIN, MANAGER, or EDITOR)
 export function canEdit(user: UserSession | null): boolean {
   if (!user) return false
-  return user.role === 'ADMIN' || user.role === 'EDITOR'
+  return user.role === 'ADMIN' || user.role === 'MANAGER' || user.role === 'EDITOR'
 }
 
 // Check if user is admin
