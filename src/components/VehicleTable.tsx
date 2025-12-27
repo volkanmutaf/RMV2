@@ -1314,37 +1314,47 @@ ${mileage}`
                     </div>
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap relative">
-                    <button
-                      onClick={() => openNoteModal(transaction.id)}
-                      onMouseEnter={() => transaction.note && setHoveredNoteId(transaction.id)}
-                      onMouseLeave={() => setHoveredNoteId(null)}
-                      className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
-                        transaction.note 
-                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                      }`}
-                      title={transaction.note ? "Click to view/edit note" : "Click to add note"}
-                    >
-                      {transaction.note ? '📝 Note' : '➕ No Note'}
-                    </button>
-                    {hoveredNoteId === transaction.id && transaction.note && (
-                      <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                        <div className="text-xs font-semibold text-blue-600 mb-2">
-                          📝 Note Preview: 
-                          <span className="ml-2 text-xs font-normal text-gray-600">
-                            ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
-                          </span>
-                        </div>
-                        <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                          {transaction.note}
-                        </div>
-                        {(transaction as any).noteCreatedBy && (
-                          <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-                            Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    {(() => {
+                      // Hide note button if it's a fixed MECHANIC note
+                      const isFixedMechanic = (transaction as any).noteType === 'MECHANIC' && (transaction as any).noteApproved === true
+                      const displayNote = transaction.note && !isFixedMechanic
+                      
+                      return (
+                        <>
+                          <button
+                            onClick={() => openNoteModal(transaction.id)}
+                            onMouseEnter={() => displayNote && setHoveredNoteId(transaction.id)}
+                            onMouseLeave={() => setHoveredNoteId(null)}
+                            className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
+                              displayNote
+                                ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                                : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                            }`}
+                            title={displayNote ? "Click to view/edit note" : "Click to add note"}
+                          >
+                            {displayNote ? '📝 Note' : '➕ No Note'}
+                          </button>
+                          {hoveredNoteId === transaction.id && displayNote && (
+                            <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                              <div className="text-xs font-semibold text-blue-600 mb-2">
+                                📝 Note Preview: 
+                                <span className="ml-2 text-xs font-normal text-gray-600">
+                                  ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
+                                </span>
+                              </div>
+                              <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                                {transaction.note}
+                              </div>
+                              {(transaction as any).noteCreatedBy && (
+                                <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                                  Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </>
+                      )
+                    })()}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && editingContact === transaction.id ? (
@@ -2127,26 +2137,32 @@ ${mileage}`
             
               <div className="mt-3 pt-3 border-t border-gray-200 relative">
                 <span className="text-gray-500 text-xs">Note:</span>
-                <button
-                  onClick={() => {
-                    // Mark note as read when opening modal
-                    if (transaction.note && (transaction as any).noteCreatedAt && currentUser) {
-                      const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                      const noteCreatedAtTime = new Date((transaction as any).noteCreatedAt).getTime().toString()
-                      localStorage.setItem(readKey, noteCreatedAtTime)
-                      setReadNotes(prev => new Set(prev).add(readKey))
-                    }
-                    openNoteModal(transaction.id)
-                  }}
-                  onMouseEnter={() => transaction.note && setHoveredNoteId(transaction.id)}
-                  onMouseLeave={() => setHoveredNoteId(null)}
-                  className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
-                    transaction.note 
-                      ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                  }`}
-                  title={transaction.note ? "Click to view/edit note" : "Click to add note"}
-                >
+                {(() => {
+                  // Hide note button if it's a fixed MECHANIC note
+                  const isFixedMechanic = (transaction as any).noteType === 'MECHANIC' && (transaction as any).noteApproved === true
+                  const displayNote = transaction.note && !isFixedMechanic
+                  
+                  return (
+                    <button
+                      onClick={() => {
+                        // Mark note as read when opening modal
+                        if (displayNote && (transaction as any).noteCreatedAt && currentUser) {
+                          const readKey = `note_read_${transaction.id}_${currentUser.username}`
+                          const noteCreatedAtTime = new Date((transaction as any).noteCreatedAt).getTime().toString()
+                          localStorage.setItem(readKey, noteCreatedAtTime)
+                          setReadNotes(prev => new Set(prev).add(readKey))
+                        }
+                        openNoteModal(transaction.id)
+                      }}
+                      onMouseEnter={() => displayNote && setHoveredNoteId(transaction.id)}
+                      onMouseLeave={() => setHoveredNoteId(null)}
+                      className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
+                        displayNote
+                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                          : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                      }`}
+                      title={displayNote ? "Click to view/edit note" : "Click to add note"}
+                    >
                   {(() => {
                     // Check if note is new for current user
                     if (!transaction.note || !currentUser) {

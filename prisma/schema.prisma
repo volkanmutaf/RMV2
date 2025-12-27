@@ -64,9 +64,10 @@ model Transaction {
   plate     String?
   note      String?
   noteType  TransactionNoteType? // GENERAL or MECHANIC
-  noteApproved Boolean   @default(false) // Approved by caner, volkan, or admin
-  noteApprovedBy String?  // Username of user who approved
-  noteApprovedAt DateTime? // When note was approved
+  noteApproved Boolean   @default(false) // Fixed by caner, volkan, or admin
+  noteApprovedBy String?  // Username of user who fixed
+  noteApprovedAt DateTime? // When note was fixed
+  noteArchived Boolean   @default(false) // Archived after 24 hours of being fixed
   ref       String?
   archived  Boolean       @default(false)
   archivedAt DateTime?

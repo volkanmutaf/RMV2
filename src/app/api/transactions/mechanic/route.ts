@@ -14,7 +14,7 @@ async function getCurrentUser(): Promise<UserSession | null> {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = await getCurrentUser()
     
@@ -22,12 +22,16 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { searchParams } = new URL(request.url)
+    const archived = searchParams.get('archived') === 'true'
+
     // Get all transactions with MECHANIC notes
     const transactions = await prisma.transaction.findMany({
       where: {
         note: { not: null },
         noteType: 'MECHANIC',
-        archived: { not: true }
+        archived: { not: true },
+        noteArchived: archived
       },
       include: {
         vehicle: true,

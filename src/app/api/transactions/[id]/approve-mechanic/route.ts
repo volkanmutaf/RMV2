@@ -25,14 +25,14 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check if user can approve (caner, volkan, or admin)
-    const canApprove = user.username.toLowerCase() === 'caner' || 
-                      user.username.toLowerCase() === 'volkan' || 
-                      user.role === 'ADMIN'
+    // Check if user can fix (caner, volkan, or admin)
+    const canFix = user.username.toLowerCase() === 'caner' || 
+                   user.username.toLowerCase() === 'volkan' || 
+                   user.role === 'ADMIN'
     
-    if (!canApprove) {
+    if (!canFix) {
       return NextResponse.json(
-        { error: 'Only Caner, Volkan, or Admin can approve mechanic notes' },
+        { error: 'Only Caner, Volkan, or Admin can fix mechanic notes' },
         { status: 403 }
       )
     }
@@ -62,7 +62,7 @@ export async function POST(
       )
     }
 
-    // Update approval status
+    // Update fixed status
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
       data: {
@@ -78,9 +78,9 @@ export async function POST(
 
     return NextResponse.json(updatedTransaction)
   } catch (error) {
-    console.error('Error approving mechanic note:', error)
+    console.error('Error fixing mechanic note:', error)
     return NextResponse.json(
-      { error: 'Failed to approve mechanic note' },
+      { error: 'Failed to fix mechanic note' },
       { status: 500 }
     )
   }
