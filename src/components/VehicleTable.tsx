@@ -71,6 +71,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [selectedTransactionForNote, setSelectedTransactionForNote] = useState<string | null>(null)
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null)
+  const [noteType, setNoteType] = useState<'GENERAL' | 'MECHANIC'>('GENERAL')
   const [showCopyNotification, setShowCopyNotification] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -788,15 +789,23 @@ ${mileage}`
 
   const openNoteModal = (transactionId: string) => {
     setSelectedTransactionForNote(transactionId)
+    const transaction = transactions.find(t => t.id === transactionId)
+    if (transaction) {
+      const currentNoteType = (transaction as any).noteType || 'GENERAL'
+      setNoteType(currentNoteType === 'MECHANIC' ? 'MECHANIC' : 'GENERAL')
+    } else {
+      setNoteType('GENERAL')
+    }
     setShowNoteModal(true)
   }
 
   const closeNoteModal = () => {
     setShowNoteModal(false)
     setSelectedTransactionForNote(null)
+    setNoteType('GENERAL')
   }
 
-  const handleNoteSave = async (transactionId: string, newNote: string) => {
+  const handleNoteSave = async (transactionId: string, newNote: string, noteTypeValue: 'GENERAL' | 'MECHANIC' = 'GENERAL') => {
     try {
       const response = await fetch(`/api/transactions/${transactionId}`, {
         method: 'PUT',
@@ -804,7 +813,10 @@ ${mileage}`
           'Content-Type': 'application/json',
           'x-status-change': 'true'
         },
-        body: JSON.stringify({ note: newNote }),
+        body: JSON.stringify({ 
+          note: newNote,
+          noteType: noteTypeValue
+        }),
       })
       
       if (!response.ok) {
@@ -850,7 +862,10 @@ ${mileage}`
           'Content-Type': 'application/json',
           'x-status-change': 'true'
         },
-        body: JSON.stringify({ note: '' }),
+        body: JSON.stringify({ 
+          note: '',
+          noteType: null
+        }),
       })
       
       if (!response.ok) {
@@ -1314,7 +1329,12 @@ ${mileage}`
                     </button>
                     {hoveredNoteId === transaction.id && transaction.note && (
                       <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                        <div className="text-xs font-semibold text-blue-600 mb-2">📝 Note Preview:</div>
+                        <div className="text-xs font-semibold text-blue-600 mb-2">
+                          📝 Note Preview: 
+                          <span className="ml-2 text-xs font-normal text-gray-600">
+                            ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
+                          </span>
+                        </div>
                         <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
                           {transaction.note}
                         </div>
@@ -1691,6 +1711,12 @@ ${mileage}`
               className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
             >
               💰 Add Deal
+            </button>
+            <button
+              onClick={() => window.location.href = '/mechanic'}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
+            >
+              🔧 Mechanic
             </button>
             {isAdmin && (
               <>
@@ -3067,6 +3093,36 @@ ${mileage}`
                 )}
               </div>
               
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Note Type *
+                </label>
+                <div className="flex gap-4">
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="noteType"
+                      value="GENERAL"
+                      checked={noteType === 'GENERAL'}
+                      onChange={(e) => setNoteType(e.target.value as 'GENERAL' | 'MECHANIC')}
+                      className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-900">General</span>
+                  </label>
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="radio"
+                      name="noteType"
+                      value="MECHANIC"
+                      checked={noteType === 'MECHANIC'}
+                      onChange={(e) => setNoteType(e.target.value as 'GENERAL' | 'MECHANIC')}
+                      className="mr-2 w-4 h-4 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-sm text-gray-900">Mechanic</span>
+                  </label>
+                </div>
+              </div>
+              
               <textarea
                 value={localNotes[selectedTransactionForNote] !== undefined ? localNotes[selectedTransactionForNote] : currentNote}
                 onChange={(e) => {
@@ -3086,7 +3142,7 @@ ${mileage}`
                     const noteToSave = localNotes[selectedTransactionForNote] !== undefined 
                       ? localNotes[selectedTransactionForNote] 
                       : currentNote
-                    handleNoteSave(selectedTransactionForNote, noteToSave)
+                    handleNoteSave(selectedTransactionForNote, noteToSave, noteType)
                   }}
                   className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors cursor-pointer"
                 >

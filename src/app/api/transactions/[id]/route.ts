@@ -46,6 +46,7 @@ export async function PUT(
     const updateData: any = {
       plate: data.plate,
       note: data.note,
+      noteType: data.noteType !== undefined ? data.noteType : undefined,
       ref: data.ref
     }
     
@@ -86,6 +87,12 @@ export async function PUT(
       // Also update lastUpdatedBy for status changes
       updateData.lastUpdatedBy = user.username
       updateData.lastUpdatedAt = new Date()
+      // Reset approval if note is changed
+      if (data.note && data.note.trim() !== '') {
+        updateData.noteApproved = false
+        updateData.noteApprovedBy = null
+        updateData.noteApprovedAt = null
+      }
     }
     
     // If isUrgent is being changed

@@ -63,6 +63,10 @@ model Transaction {
   status    VehicleStatus?
   plate     String?
   note      String?
+  noteType  TransactionNoteType? // GENERAL or MECHANIC
+  noteApproved Boolean   @default(false) // Approved by caner, volkan, or admin
+  noteApprovedBy String?  // Username of user who approved
+  noteApprovedAt DateTime? // When note was approved
   ref       String?
   archived  Boolean       @default(false)
   archivedAt DateTime?
@@ -124,6 +128,11 @@ model Note {
 enum NoteType {
   READY
   REGISTRATION_PICKED_UP
+}
+
+enum TransactionNoteType {
+  GENERAL
+  MECHANIC
 }
 
 // Deal model
