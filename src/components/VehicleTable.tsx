@@ -2143,88 +2143,92 @@ ${mileage}`
                   const displayNote = transaction.note && !isFixedMechanic
                   
                   return (
-                    <button
-                      onClick={() => {
-                        // Mark note as read when opening modal
-                        if (displayNote && (transaction as any).noteCreatedAt && currentUser) {
+                    <>
+                      <button
+                        onClick={() => {
+                          // Mark note as read when opening modal
+                          if (displayNote && (transaction as any).noteCreatedAt && currentUser) {
+                            const readKey = `note_read_${transaction.id}_${currentUser.username}`
+                            const noteCreatedAtTime = new Date((transaction as any).noteCreatedAt).getTime().toString()
+                            localStorage.setItem(readKey, noteCreatedAtTime)
+                            setReadNotes(prev => new Set(prev).add(readKey))
+                          }
+                          openNoteModal(transaction.id)
+                        }}
+                        onMouseEnter={() => displayNote && setHoveredNoteId(transaction.id)}
+                        onMouseLeave={() => setHoveredNoteId(null)}
+                        className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
+                          displayNote
+                            ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
+                            : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                        }`}
+                        title={displayNote ? "Click to view/edit note" : "Click to add note"}
+                      >
+                        {(() => {
+                          // Check if note is new for current user
+                          if (!transaction.note || !currentUser) {
+                            return <span>{transaction.note ? '📝 Note' : '➕ No Note'}</span>
+                          }
+                          
+                          const noteCreatedAt = (transaction as any).noteCreatedAt
+                          if (!noteCreatedAt) {
+                            // Old note without createdAt - don't show badge
+                            return <span>📝 Note</span>
+                          }
+                          
                           const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                          const noteCreatedAtTime = new Date((transaction as any).noteCreatedAt).getTime().toString()
-                          localStorage.setItem(readKey, noteCreatedAtTime)
-                          setReadNotes(prev => new Set(prev).add(readKey))
-                        }
-                        openNoteModal(transaction.id)
-                      }}
-                      onMouseEnter={() => displayNote && setHoveredNoteId(transaction.id)}
-                      onMouseLeave={() => setHoveredNoteId(null)}
-                      className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
-                        displayNote
-                          ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
-                          : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
-                      }`}
-                      title={displayNote ? "Click to view/edit note" : "Click to add note"}
-                    >
-                  {(() => {
-                    // Check if note is new for current user
-                    if (!transaction.note || !currentUser) {
-                      return <span>{transaction.note ? '📝 Note' : '➕ No Note'}</span>
-                    }
-                    
-                    const noteCreatedAt = (transaction as any).noteCreatedAt
-                    if (!noteCreatedAt) {
-                      // Old note without createdAt - don't show badge
-                      return <span>📝 Note</span>
-                    }
-                    
-                    const readKey = `note_read_${transaction.id}_${currentUser.username}`
-                    const lastReadTimeStr = localStorage.getItem(readKey)
-                    
-                    // If never read, show badge
-                    if (!lastReadTimeStr) {
-                      return (
-                        <span className="relative inline-block w-full">
-                          📝 Note
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
-                            1
-                          </span>
-                        </span>
-                      )
-                    }
-                    
-                    // Compare timestamps
-                    const noteTime = new Date(noteCreatedAt).getTime()
-                    const lastReadTime = parseInt(lastReadTimeStr, 10)
-                    const isNewNote = noteTime > lastReadTime
-                    
-                    return (
-                      <span className="relative inline-block w-full">
-                        📝 Note
-                        {isNewNote && (
-                          <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
-                            1
-                          </span>
-                        )}
-                      </span>
-                    )
-                  })()}
-                </button>
-                {hoveredNoteId === transaction.id && transaction.note && !((transaction as any).noteType === 'MECHANIC' && (transaction as any).noteApproved === true) && (
-                  <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                    <div className="text-xs font-semibold text-blue-600 mb-2">
-                      📝 Note Preview: 
-                      <span className="ml-2 text-xs font-normal text-gray-600">
-                        ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
-                      </span>
-                    </div>
-                    <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                      {transaction.note}
-                    </div>
-                    {(transaction as any).noteCreatedBy && (
-                      <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
-                        Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
-                      </div>
-                    )}
-                  </div>
-                )}
+                          const lastReadTimeStr = localStorage.getItem(readKey)
+                          
+                          // If never read, show badge
+                          if (!lastReadTimeStr) {
+                            return (
+                              <span className="relative inline-block w-full">
+                                📝 Note
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
+                                  1
+                                </span>
+                              </span>
+                            )
+                          }
+                          
+                          // Compare timestamps
+                          const noteTime = new Date(noteCreatedAt).getTime()
+                          const lastReadTime = parseInt(lastReadTimeStr, 10)
+                          const isNewNote = noteTime > lastReadTime
+                          
+                          return (
+                            <span className="relative inline-block w-full">
+                              📝 Note
+                              {isNewNote && (
+                                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold shadow-lg z-10">
+                                  1
+                                </span>
+                              )}
+                            </span>
+                          )
+                        })()}
+                      </button>
+                      {hoveredNoteId === transaction.id && displayNote && (
+                        <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                          <div className="text-xs font-semibold text-blue-600 mb-2">
+                            📝 Note Preview: 
+                            <span className="ml-2 text-xs font-normal text-gray-600">
+                              ({(transaction as any).noteType === 'MECHANIC' ? 'Mechanic' : 'General'})
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                            {transaction.note}
+                          </div>
+                          {(transaction as any).noteCreatedBy && (
+                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                              Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )
+                })()}
               </div>
             {transaction.lastUpdatedBy && (
               <div className="mt-3 pt-3 border-t border-gray-200">

@@ -116,6 +116,34 @@ export default function MechanicPage() {
     }
   }
 
+  const handleUnfix = async (transactionId: string) => {
+    if (!currentUser || currentUser.role !== 'ADMIN') return
+
+    // Confirmation dialog
+    if (!confirm('Emin misiniz? Bu notu unfix yapmak istediğinizden emin misiniz? Not tekrar pending durumuna dönecek.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/transactions/${transactionId}/unfix-mechanic`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to unfix note')
+      }
+
+      // Refresh notes
+      fetchMechanicNotes()
+    } catch (error) {
+      console.error('Error unfixing note:', error)
+      alert('Failed to unfix note')
+    }
+  }
+
   const formatDate = (date: Date | null) => {
     if (!date) return 'N/A'
     return new Date(date).toLocaleDateString('en-US', {
@@ -318,6 +346,15 @@ export default function MechanicPage() {
                     className="w-full mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
                   >
                     ✓ Fix
+                  </button>
+                )}
+
+                {note.noteApproved && !note.noteArchived && currentUser?.role === 'ADMIN' && (
+                  <button
+                    onClick={() => handleUnfix(note.id)}
+                    className="w-full mt-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                  >
+                    ↺ Unfix
                   </button>
                 )}
               </div>
