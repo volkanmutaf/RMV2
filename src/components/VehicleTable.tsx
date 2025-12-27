@@ -68,6 +68,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [editingDate, setEditingDate] = useState<string | null>(null)
   const [showNoteModal, setShowNoteModal] = useState(false)
   const [selectedTransactionForNote, setSelectedTransactionForNote] = useState<string | null>(null)
+  const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null)
   const [showCopyNotification, setShowCopyNotification] = useState(false)
   const [showSuccessNotification, setShowSuccessNotification] = useState(false)
   const [successMessage, setSuccessMessage] = useState('')
@@ -1429,9 +1430,11 @@ ${mileage}`
                       {transaction.plate || '-'}
                     </div>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">
+                  <td className="px-3 py-2 whitespace-nowrap relative">
                     <button
                       onClick={() => openNoteModal(transaction.id)}
+                      onMouseEnter={() => transaction.note && setHoveredNoteId(transaction.id)}
+                      onMouseLeave={() => setHoveredNoteId(null)}
                       className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
                         transaction.note 
                           ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
@@ -1441,6 +1444,19 @@ ${mileage}`
                     >
                       {transaction.note ? '📝 Note' : '➕ No Note'}
                     </button>
+                    {hoveredNoteId === transaction.id && transaction.note && (
+                      <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                        <div className="text-xs font-semibold text-blue-600 mb-2">📝 Note Preview:</div>
+                        <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                          {transaction.note}
+                        </div>
+                        {(transaction as any).noteCreatedBy && (
+                          <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                            Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-3 py-2 whitespace-nowrap">
                     {isAdmin && editingContact === transaction.id ? (
@@ -2219,7 +2235,7 @@ ${mileage}`
               </div>
             </div>
             
-              <div className="mt-3 pt-3 border-t border-gray-200">
+              <div className="mt-3 pt-3 border-t border-gray-200 relative">
                 <span className="text-gray-500 text-xs">Note:</span>
                 <button
                   onClick={() => {
@@ -2232,6 +2248,8 @@ ${mileage}`
                     }
                     openNoteModal(transaction.id)
                   }}
+                  onMouseEnter={() => transaction.note && setHoveredNoteId(transaction.id)}
+                  onMouseLeave={() => setHoveredNoteId(null)}
                   className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer mt-1 w-full relative ${
                     transaction.note 
                       ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
@@ -2283,6 +2301,19 @@ ${mileage}`
                     )
                   })()}
                 </button>
+                {hoveredNoteId === transaction.id && transaction.note && (
+                  <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                    <div className="text-xs font-semibold text-blue-600 mb-2">📝 Note Preview:</div>
+                    <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                      {transaction.note}
+                    </div>
+                    {(transaction as any).noteCreatedBy && (
+                      <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                        Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             {transaction.lastUpdatedBy && (
               <div className="mt-3 pt-3 border-t border-gray-200">
@@ -2740,9 +2771,11 @@ ${mileage}`
                     </div>
                   )}
                 </td>
-                <td className="px-3 py-2 whitespace-nowrap">
+                <td className="px-3 py-2 whitespace-nowrap relative">
                   <button
                     onClick={() => openNoteModal(transaction.id)}
+                    onMouseEnter={() => transaction.note && setHoveredNoteId(transaction.id)}
+                    onMouseLeave={() => setHoveredNoteId(null)}
                     className={`text-xs px-3 py-1 rounded transition-colors cursor-pointer ${
                       transaction.note 
                         ? 'bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold' 
@@ -2752,6 +2785,19 @@ ${mileage}`
                   >
                     {transaction.note ? '📝 Note' : '➕ No Note'}
                   </button>
+                  {hoveredNoteId === transaction.id && transaction.note && (
+                    <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                      <div className="text-xs font-semibold text-blue-600 mb-2">📝 Note Preview:</div>
+                      <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                        {transaction.note}
+                      </div>
+                      {(transaction as any).noteCreatedBy && (
+                        <div className="text-xs text-gray-500 mt-2 pt-2 border-t border-gray-200">
+                          Added by: <span className="font-semibold">{(transaction as any).noteCreatedBy}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
                   {isAdmin && editingContact === transaction.id ? (
