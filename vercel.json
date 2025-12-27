@@ -10,8 +10,7 @@
     },
     {
       "path": "/api/transactions/auto-archive-mechanic",
-      "schedule": "0 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
-
