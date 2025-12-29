@@ -38,8 +38,11 @@ export default function DealsPage() {
   const [currentUser, setCurrentUser] = useState<UserSession | null>(null)
   const [loading, setLoading] = useState(true)
   const [editingAmount, setEditingAmount] = useState<{[key: string]: string}>({})
+  const [editingDeal, setEditingDeal] = useState<string | null>(null)
+  const [editForm, setEditForm] = useState<{dealNumber: string, type: string, insurance: string}>({dealNumber: '', type: '', insurance: ''})
   const [searchTerm, setSearchTerm] = useState('')
   const [unreadCount, setUnreadCount] = useState(0)
+  const isAdmin = currentUser?.role === 'ADMIN'
   
   useEffect(() => {
     // Check authentication
@@ -98,6 +101,60 @@ export default function DealsPage() {
     } catch (error) {
       console.error('Failed to update amount:', error)
       alert('Failed to update amount')
+    }
+  }
+
+  const handleEditDeal = (deal: Deal) => {
+    setEditingDeal(deal.id)
+    setEditForm({
+      dealNumber: deal.dealNumber,
+      type: deal.type,
+      insurance: deal.insurance || ''
+    })
+  }
+
+  const handleSaveEdit = async (dealId: string) => {
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editForm),
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to update deal')
+      }
+      
+      const updatedDeal = await response.json()
+      setDeals(prev => prev.map(d => d.id === dealId ? updatedDeal : d))
+      setEditingDeal(null)
+      setEditForm({dealNumber: '', type: '', insurance: ''})
+    } catch (error) {
+      console.error('Failed to update deal:', error)
+      alert('Failed to update deal')
+    }
+  }
+
+  const handleDeleteDeal = async (dealId: string) => {
+    if (!confirm('Are you sure you want to delete this deal? This action cannot be undone.')) {
+      return
+    }
+    
+    try {
+      const response = await fetch(`/api/deals/${dealId}`, {
+        method: 'DELETE',
+      })
+      
+      if (!response.ok) {
+        throw new Error('Failed to delete deal')
+      }
+      
+      setDeals(prev => prev.filter(d => d.id !== dealId))
+    } catch (error) {
+      console.error('Failed to delete deal:', error)
+      alert('Failed to delete deal')
     }
   }
   
@@ -228,24 +285,86 @@ export default function DealsPage() {
                       {userDeals.map((deal) => (
                         <div
                           key={deal.id}
-                          className="border-2 border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50"
+                          className="border-2 border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50 relative"
                         >
+                          {isAdmin && (
+                            <div className="absolute top-2 right-2 flex gap-2">
+                              {editingDeal === deal.id ? (
+                                <>
+                                  <button
+                                    onClick={() => handleSaveEdit(deal.id)}
+                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                  >
+                                    ✓ Save
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingDeal(null)
+                                      setEditForm({dealNumber: '', type: '', insurance: ''})
+                                    }}
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                  >
+                                    ✕ Cancel
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    onClick={() => handleEditDeal(deal)}
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                  >
+                                    ✏️ Edit
+                                  </button>
+                                  <button
+                                    onClick={() => handleDeleteDeal(deal.id)}
+                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                  >
+                                    🗑️ Delete
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {/* Deal Number & Type */}
                             <div className="space-y-2">
-                              <div className="flex items-center gap-2">
-                                <span className="text-xs font-semibold text-gray-500 uppercase">Deal #</span>
-                                <span className="text-lg font-bold text-gray-900">{deal.dealNumber}</span>
-                              </div>
-                              <div>
-                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                  deal.type === 'DEPOSIT' 
-                                    ? 'bg-blue-100 text-blue-800 border border-blue-300' 
-                                    : 'bg-green-100 text-green-800 border border-green-300'
-                                }`}>
-                                  {deal.type}
-                                </span>
-                              </div>
+                              <div className="text-xs font-semibold text-gray-500 uppercase">Deal #</div>
+                              {editingDeal === deal.id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={editForm.dealNumber}
+                                    onChange={(e) => {
+                                      const value = e.target.value.replace(/\D/g, '').slice(0, 4)
+                                      setEditForm({...editForm, dealNumber: value})
+                                    }}
+                                    className="w-full px-2 py-1 border-2 border-blue-300 rounded text-sm font-semibold text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="0000"
+                                    maxLength={4}
+                                  />
+                                  <select
+                                    value={editForm.type}
+                                    onChange={(e) => setEditForm({...editForm, type: e.target.value})}
+                                    className="w-full px-2 py-1 border-2 border-blue-300 rounded text-sm font-semibold text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  >
+                                    <option value="DEPOSIT">DEPOSIT</option>
+                                    <option value="DEAL">DEAL</option>
+                                  </select>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="text-lg font-bold text-gray-900">{deal.dealNumber}</div>
+                                  <div>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                      deal.type === 'DEPOSIT' 
+                                        ? 'bg-blue-100 text-blue-800 border border-blue-300' 
+                                        : 'bg-green-100 text-green-800 border border-green-300'
+                                    }`}>
+                                      {deal.type}
+                                    </span>
+                                  </div>
+                                </>
+                              )}
                             </div>
 
                             {/* Vehicle Info */}
@@ -270,12 +389,22 @@ export default function DealsPage() {
                             {/* Insurance */}
                             <div className="space-y-2">
                               <div className="text-xs font-semibold text-gray-500 uppercase">Insurance</div>
-                              {deal.insurance ? (
-                                <div className="text-sm font-medium text-gray-900 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
-                                  {deal.insurance}
-                                </div>
+                              {editingDeal === deal.id ? (
+                                <input
+                                  type="text"
+                                  value={editForm.insurance}
+                                  onChange={(e) => setEditForm({...editForm, insurance: e.target.value})}
+                                  className="w-full px-2 py-1 border-2 border-blue-300 rounded text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Insurance info..."
+                                />
                               ) : (
-                                <span className="text-gray-400 italic text-sm">Not provided</span>
+                                deal.insurance ? (
+                                  <div className="text-sm font-medium text-gray-900 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
+                                    {deal.insurance}
+                                  </div>
+                                ) : (
+                                  <span className="text-gray-400 italic text-sm">Not provided</span>
+                                )
                               )}
                             </div>
 

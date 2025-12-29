@@ -37,10 +37,19 @@ export default function MechanicPage() {
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [showArchived, setShowArchived] = useState(false)
+  const [editingNote, setEditingNote] = useState<string | null>(null)
+  const [editNoteText, setEditNoteText] = useState('')
+  const isAdmin = currentUser?.role === 'ADMIN'
 
   useEffect(() => {
     fetchCurrentUser()
   }, [])
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchMechanicNotes()
+    }
+  }, [showArchived, currentUser])
 
   const fetchCurrentUser = async () => {
     try {
@@ -48,12 +57,19 @@ export default function MechanicPage() {
       const data = await response.json()
       if (data.user) {
         setCurrentUser(data.user)
+        // Only ADMIN, MANAGER, or specific users (caner, volkan) can access this page
+        const allowedUsers = ['ADMIN', 'MANAGER', 'caner', 'volkan']
+        if (!allowedUsers.includes(data.user.role) && !allowedUsers.includes(data.user.username)) {
+          router.push('/')
+        }
       } else {
         router.push('/login')
       }
     } catch (error) {
       console.error('Error fetching current user:', error)
       router.push('/login')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -67,16 +83,8 @@ export default function MechanicPage() {
       setNotes(data)
     } catch (error) {
       console.error('Error fetching mechanic notes:', error)
-    } finally {
-      setLoading(false)
     }
   }
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchMechanicNotes()
-    }
-  }, [showArchived, currentUser])
 
   const handleFix = async (transactionId: string) => {
     if (!currentUser) return
@@ -144,6 +152,56 @@ export default function MechanicPage() {
     }
   }
 
+  const handleEditNote = (note: MechanicNote) => {
+    setEditingNote(note.id)
+    setEditNoteText(note.note)
+  }
+
+  const handleSaveEdit = async (noteId: string) => {
+    try {
+      const response = await fetch(`/api/transactions/${noteId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-status-change': 'true'
+        },
+        body: JSON.stringify({ note: editNoteText, noteType: 'MECHANIC' }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to update note')
+      }
+
+      fetchMechanicNotes()
+      setEditingNote(null)
+      setEditNoteText('')
+    } catch (error) {
+      console.error('Error updating note:', error)
+      alert('Failed to update note')
+    }
+  }
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Are you sure you want to delete this mechanic note? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/transactions/${noteId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete note')
+      }
+
+      setNotes(prev => prev.filter(n => n.id !== noteId))
+    } catch (error) {
+      console.error('Error deleting note:', error)
+      alert('Failed to delete note')
+    }
+  }
+
   const formatDate = (date: Date | null) => {
     if (!date) return 'N/A'
     return new Date(date).toLocaleDateString('en-US', {
@@ -166,10 +224,10 @@ export default function MechanicPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-orange-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading mechanic notes...</p>
         </div>
       </div>
     )
@@ -201,7 +259,7 @@ export default function MechanicPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-red-50 to-orange-50 p-4">
       <div className="container mx-auto px-4 py-6">
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
           <div className="flex justify-between items-center mb-6">
@@ -266,11 +324,11 @@ export default function MechanicPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
             {sortedNotes.map((note) => (
               <div
                 key={note.id}
-                className={`rounded-lg shadow-lg p-4 border-2 transition-all ${
+                className={`rounded-lg shadow-md p-3 border-2 transition-all relative ${
                   note.noteArchived
                     ? 'bg-gray-50 border-gray-300'
                     : note.noteApproved
@@ -278,62 +336,110 @@ export default function MechanicPage() {
                     : 'bg-red-50 border-red-300'
                 }`}
               >
-                <div className="flex justify-between items-start mb-3">
-                  <div className="flex-1">
-                    {note.noteArchived && (
-                      <div className="mb-2 bg-orange-100 border border-orange-300 rounded px-2 py-1">
-                        <span className="text-xs font-bold text-orange-700">⚠️ ARCHIVE</span>
-                      </div>
+                {isAdmin && (
+                  <div className="absolute top-2 right-2 flex gap-1 z-10">
+                    {editingNote === note.id ? (
+                      <>
+                        <button
+                          onClick={() => handleSaveEdit(note.id)}
+                          className="bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
+                          title="Save"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingNote(null)
+                            setEditNoteText('')
+                          }}
+                          className="bg-gray-500 hover:bg-gray-600 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
+                          title="Cancel"
+                        >
+                          ✕
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleEditNote(note)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
+                          title="Edit"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                          onClick={() => handleDeleteNote(note.id)}
+                          className="bg-red-600 hover:bg-red-700 text-white px-2 py-1 rounded text-[10px] font-semibold transition-colors"
+                          title="Delete"
+                        >
+                          🗑️
+                        </button>
+                      </>
                     )}
-                    <div className="text-xs font-semibold text-gray-600 mb-1">
-                      {formatDate(note.noteCreatedAt)}
-                    </div>
-                    <div className="text-sm font-bold text-gray-900 mb-1">
-                      {note.customer.name}
-                    </div>
-                    <div className="text-xs text-gray-700 mb-2">
-                      {note.vehicle.year} {note.vehicle.make} {note.vehicle.model}
-                    </div>
                   </div>
+                )}
+
+                <div className="mb-2">
+                  {note.noteArchived && (
+                    <div className="mb-1 bg-orange-100 border border-orange-300 rounded px-1 py-0.5">
+                      <span className="text-[10px] font-bold text-orange-700">⚠️ ARCHIVE</span>
+                    </div>
+                  )}
+                  <div className="text-[10px] font-semibold text-gray-600 mb-1">
+                    {formatDate(note.noteCreatedAt)}
+                  </div>
+                  <div className="text-xs font-bold text-gray-900 mb-1 truncate">
+                    {note.customer.name}
+                  </div>
+                  <div className="text-[10px] text-gray-700 mb-2 truncate">
+                    {note.vehicle.year} {note.vehicle.make} {note.vehicle.model}
+                  </div>
+                </div>
+
+                <div className="mb-2">
                   {note.noteArchived ? (
-                    <div className="bg-gray-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    <span className="bg-gray-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                       📦 Archived
-                    </div>
+                    </span>
                   ) : note.noteApproved ? (
-                    <div className="bg-green-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                       ✓ Fixed
-                    </div>
+                    </span>
                   ) : (
-                    <div className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    <span className="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">
                       Pending
-                    </div>
+                    </span>
                   )}
                 </div>
                 
-                <div className="text-sm text-gray-800 whitespace-pre-wrap mb-3 bg-white p-2 rounded border border-gray-200">
-                  {note.note}
-                </div>
+                {editingNote === note.id ? (
+                  <textarea
+                    value={editNoteText}
+                    onChange={(e) => setEditNoteText(e.target.value)}
+                    className="w-full px-2 py-1 border-2 border-blue-300 rounded text-[11px] text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    rows={4}
+                    autoFocus
+                  />
+                ) : (
+                  <div className="text-[11px] text-gray-800 whitespace-pre-wrap mb-2 bg-white p-2 rounded border border-gray-200 max-h-24 overflow-y-auto">
+                    {note.note}
+                  </div>
+                )}
                 
-                <div className="text-xs text-gray-600 mb-2">
+                <div className="text-[10px] text-gray-600 mb-1">
                   <div>Added by: <span className="font-semibold">{note.noteCreatedBy || 'Unknown'}</span></div>
                   {note.noteCreatedAt && (
-                    <div className="text-gray-500 mt-1">
+                    <div className="text-gray-500 mt-0.5">
                       {formatDateTime(note.noteCreatedAt)}
                     </div>
                   )}
                 </div>
 
-                {note.noteArchived && (
-                  <div className="text-xs text-orange-700 mb-2 bg-orange-50 p-2 rounded border border-orange-200">
-                    <div className="font-semibold">⚠️ This note is archived</div>
-                  </div>
-                )}
-
                 {note.noteApproved && note.noteApprovedBy && (
-                  <div className="text-xs text-green-700 mb-2">
+                  <div className="text-[10px] text-green-700 mb-1">
                     <div>Fixed by: <span className="font-semibold">{note.noteApprovedBy}</span></div>
                     {note.noteApprovedAt && (
-                      <div className="text-green-600 mt-1">
+                      <div className="text-green-600 mt-0.5">
                         {formatDateTime(note.noteApprovedAt)}
                       </div>
                     )}
@@ -343,16 +449,16 @@ export default function MechanicPage() {
                 {!note.noteApproved && !note.noteArchived && canFix && (
                   <button
                     onClick={() => handleFix(note.id)}
-                    className="w-full mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors"
+                    className="w-full mt-2 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[11px] font-medium transition-colors"
                   >
                     ✓ Fix
                   </button>
                 )}
 
-                {note.noteApproved && !note.noteArchived && currentUser?.role === 'ADMIN' && (
+                {note.noteApproved && !note.noteArchived && isAdmin && (
                   <button
                     onClick={() => handleUnfix(note.id)}
-                    className="w-full mt-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+                    className="w-full mt-2 px-2 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-[11px] font-medium transition-colors"
                   >
                     ↺ Unfix
                   </button>
