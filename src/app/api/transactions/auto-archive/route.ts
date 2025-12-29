@@ -2,22 +2,21 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
 /**
- * Auto-archive transactions with PICKED_UP status that have been in that status for 24+ hours
+ * Auto-archive transactions with PICKED_UP status that have been in that status for 12+ hours
  * This endpoint should be called periodically (e.g., via cron job)
  * Cron schedule: Every hour (0 * * * *)
  * 
  * Triggered automatically by Vercel cron jobs
- * Final test after GitHub-Vercel connection
  */
 export async function POST() {
   try {
     const now = new Date()
-    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000) // 24 hours ago
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000) // 12 hours ago
 
     // Find transactions that:
     // 1. Have status PICKED_UP
     // 2. Are not already archived
-    // 3. Have lastUpdatedAt that is 24+ hours ago (or null and createdAt is 24+ hours ago)
+    // 3. Have lastUpdatedAt that is 12+ hours ago (or null and createdAt is 12+ hours ago)
     const transactionsToArchive = await prisma.transaction.findMany({
       where: {
         status: 'PICKED_UP',
@@ -25,13 +24,13 @@ export async function POST() {
         OR: [
           {
             lastUpdatedAt: {
-              lte: twentyFourHoursAgo
+              lte: twelveHoursAgo
             }
           },
           {
             lastUpdatedAt: null,
             createdAt: {
-              lte: twentyFourHoursAgo
+              lte: twelveHoursAgo
             }
           }
         ]

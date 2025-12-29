@@ -29,6 +29,53 @@ export default async function Home() {
   if (!user) {
     redirect('/login')
   }
+  
+  // Auto-archive PICKED_UP transactions that are 12+ hours old
+  try {
+    const now = new Date()
+    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000) // 12 hours ago
+
+    const transactionsToArchive = await prisma.transaction.findMany({
+      where: {
+        status: 'PICKED_UP',
+        archived: false,
+        OR: [
+          {
+            lastUpdatedAt: {
+              lte: twelveHoursAgo
+            }
+          },
+          {
+            lastUpdatedAt: null,
+            createdAt: {
+              lte: twelveHoursAgo
+            }
+          }
+        ]
+      },
+      select: {
+        id: true
+      }
+    })
+
+    if (transactionsToArchive.length > 0) {
+      await prisma.transaction.updateMany({
+        where: {
+          id: {
+            in: transactionsToArchive.map(t => t.id)
+          }
+        },
+        data: {
+          archived: true,
+          archivedAt: now
+        }
+      })
+      console.log(`Auto-archived ${transactionsToArchive.length} transaction(s) with PICKED_UP status`)
+    }
+  } catch (error) {
+    console.error('Error auto-archiving transactions:', error)
+  }
+  
   // Get all transactions with vehicle and customer information
   let transactions: TransactionWithRelations[] = []
   
