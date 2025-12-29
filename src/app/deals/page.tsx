@@ -8,6 +8,7 @@ interface Deal {
   dealNumber: string
   type: 'DEPOSIT' | 'DEAL'
   amount: number | null
+  insurance: string | null
   readByAdmin: boolean
   createdBy: {
     id: string
@@ -108,6 +109,7 @@ export default function DealsPage() {
       deal.dealNumber.toLowerCase().includes(search) ||
       deal.createdBy.name.toLowerCase().includes(search) ||
       deal.type.toLowerCase().includes(search) ||
+      (deal.insurance && deal.insurance.toLowerCase().includes(search)) ||
       (deal.vehicle && (
         deal.vehicle.year.toLowerCase().includes(search) ||
         deal.vehicle.make.toLowerCase().includes(search) ||
@@ -126,116 +128,161 @@ export default function DealsPage() {
     }
     dealsByUser[userName].push(deal)
   })
+
+  // Calculate totals for each user
+  const calculateTotals = (userDeals: Deal[]) => {
+    const total = userDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0)
+    const depositTotal = userDeals
+      .filter(d => d.type === 'DEPOSIT')
+      .reduce((sum, deal) => sum + (deal.amount || 0), 0)
+    const dealTotal = userDeals
+      .filter(d => d.type === 'DEAL')
+      .reduce((sum, deal) => sum + (deal.amount || 0), 0)
+    return { total, depositTotal, dealTotal }
+  }
+
+  // Calculate grand total
+  const grandTotal = filteredDeals.reduce((sum, deal) => sum + (deal.amount || 0), 0)
+  const grandDepositTotal = filteredDeals
+    .filter(d => d.type === 'DEPOSIT')
+    .reduce((sum, deal) => sum + (deal.amount || 0), 0)
+  const grandDealTotal = filteredDeals
+    .filter(d => d.type === 'DEAL')
+    .reduce((sum, deal) => sum + (deal.amount || 0), 0)
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading deals...</p>
+        </div>
       </div>
     )
   }
   
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4">
       <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-6">
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold text-gray-900">Deals Management</h1>
-              {unreadCount > 0 && (
-                <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">
-                  {unreadCount}
-                </span>
-              )}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/')}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-md hover:shadow-lg cursor-pointer"
+              >
+                ← Back to Main
+              </button>
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-gray-900">📊 Deals Report</h1>
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full shadow-md">
+                    {unreadCount} New
+                  </span>
+                )}
+              </div>
             </div>
-            <button
-              onClick={() => router.push('/')}
-              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              ← Back to Main
-            </button>
           </div>
           
           {/* Search Bar */}
           <div className="mb-4">
             <input
               type="text"
-              placeholder="🔍 Search by deal number, user name, type, vehicle..."
+              placeholder="🔍 Search by deal number, user name, type, vehicle, insurance..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500"
+              className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm text-gray-900 placeholder-gray-500 shadow-sm"
             />
           </div>
         </div>
         
         {Object.keys(dealsByUser).length === 0 ? (
-          <div className="bg-white rounded-lg shadow p-6 text-center text-gray-500">
-            No deals found
+          <div className="bg-white rounded-lg shadow-lg p-12 text-center">
+            <div className="text-6xl mb-4">📋</div>
+            <p className="text-gray-600 text-xl font-semibold">No deals found</p>
+            <p className="text-gray-400 text-sm mt-2">Deals will appear here when added.</p>
           </div>
         ) : (
           <div className="space-y-6">
-            {Object.entries(dealsByUser).map(([userName, userDeals]) => (
-              <div key={userName} className="bg-white rounded-lg shadow">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {userName} ({userDeals.length} {userDeals.length === 1 ? 'deal' : 'deals'})
-                  </h2>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Deal Number
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Vehicle
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Amount
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Created At
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
+            {/* User Cards - Vertical Layout */}
+            {Object.entries(dealsByUser).map(([userName, userDeals]) => {
+              const totals = calculateTotals(userDeals)
+              return (
+                <div key={userName} className="bg-white rounded-lg shadow-lg border-2 border-gray-200 overflow-hidden">
+                  {/* User Header */}
+                  <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 border-b-2 border-blue-700">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-bold text-white">
+                        👤 {userName}
+                      </h2>
+                      <div className="text-white text-sm font-semibold">
+                        {userDeals.length} {userDeals.length === 1 ? 'Deal' : 'Deals'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Deals List */}
+                  <div className="p-6">
+                    <div className="space-y-4">
                       {userDeals.map((deal) => (
-                        <tr key={deal.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {deal.dealNumber}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {deal.vehicle ? (
-                              <div>
-                                <div className="font-medium text-gray-900">
-                                  {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
-                                </div>
-                                {deal.vehicle.vin && (
-                                  <div className="text-xs text-gray-400 font-mono">
-                                    VIN: {deal.vehicle.vin}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-400 italic">No vehicle matched</span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              deal.type === 'DEPOSIT' 
-                                ? 'bg-blue-100 text-blue-800' 
-                                : 'bg-green-100 text-green-800'
-                            }`}>
-                              {deal.type}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {editingAmount[deal.id] !== undefined ? (
+                        <div
+                          key={deal.id}
+                          className="border-2 border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow bg-gray-50"
+                        >
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {/* Deal Number & Type */}
+                            <div className="space-y-2">
                               <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold text-gray-500 uppercase">Deal #</span>
+                                <span className="text-lg font-bold text-gray-900">{deal.dealNumber}</span>
+                              </div>
+                              <div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                  deal.type === 'DEPOSIT' 
+                                    ? 'bg-blue-100 text-blue-800 border border-blue-300' 
+                                    : 'bg-green-100 text-green-800 border border-green-300'
+                                }`}>
+                                  {deal.type}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Vehicle Info */}
+                            <div className="space-y-2">
+                              <div className="text-xs font-semibold text-gray-500 uppercase">Vehicle</div>
+                              {deal.vehicle ? (
+                                <div>
+                                  <div className="font-semibold text-gray-900">
+                                    {deal.vehicle.year} {deal.vehicle.make} {deal.vehicle.model}
+                                  </div>
+                                  {deal.vehicle.vin && (
+                                    <div className="text-xs text-gray-500 font-mono mt-1">
+                                      VIN: {deal.vehicle.vin}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 italic text-sm">No vehicle matched</span>
+                              )}
+                            </div>
+
+                            {/* Insurance */}
+                            <div className="space-y-2">
+                              <div className="text-xs font-semibold text-gray-500 uppercase">Insurance</div>
+                              {deal.insurance ? (
+                                <div className="text-sm font-medium text-gray-900 bg-yellow-50 px-2 py-1 rounded border border-yellow-200">
+                                  {deal.insurance}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 italic text-sm">Not provided</span>
+                              )}
+                            </div>
+
+                            {/* Amount */}
+                            <div className="space-y-2">
+                              <div className="text-xs font-semibold text-gray-500 uppercase">Amount</div>
+                              {editingAmount[deal.id] !== undefined ? (
                                 <input
                                   type="number"
                                   value={editingAmount[deal.id]}
@@ -243,7 +290,7 @@ export default function DealsPage() {
                                     ...prev,
                                     [deal.id]: e.target.value
                                   }))}
-                                  className="w-32 px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  className="w-full px-3 py-2 border-2 border-blue-300 rounded-lg text-sm font-semibold text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                   placeholder="0.00"
                                   step="0.01"
                                   autoFocus
@@ -262,41 +309,83 @@ export default function DealsPage() {
                                     }
                                   }}
                                 />
-                              </div>
-                            ) : (
-                              <div
-                                className="cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
-                                onClick={() => {
-                                  setEditingAmount(prev => ({
-                                    ...prev,
-                                    [deal.id]: deal.amount?.toString() || ''
-                                  }))
-                                }}
-                              >
-                                {deal.amount !== null ? `$${deal.amount.toFixed(2)}` : 'Click to add amount'}
-                              </div>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(deal.createdAt).toLocaleString('en-US', {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit'
-                            })}
-                          </td>
-                        </tr>
+                              ) : (
+                                <div
+                                  className="cursor-pointer hover:bg-blue-50 px-3 py-2 rounded-lg border-2 border-dashed border-gray-300 hover:border-blue-400 transition-colors text-sm font-semibold text-gray-700"
+                                  onClick={() => {
+                                    setEditingAmount(prev => ({
+                                      ...prev,
+                                      [deal.id]: deal.amount?.toString() || ''
+                                    }))
+                                  }}
+                                >
+                                  {deal.amount !== null ? `$${deal.amount.toFixed(2)}` : 'Click to add amount'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Created At */}
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <span className="text-xs text-gray-500">
+                              Created: {new Date(deal.createdAt).toLocaleString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+
+                    {/* User Totals */}
+                    <div className="mt-6 pt-4 border-t-2 border-gray-300 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="text-center">
+                          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Deposit Total</div>
+                          <div className="text-2xl font-bold text-blue-600">${totals.depositTotal.toFixed(2)}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Deal Total</div>
+                          <div className="text-2xl font-bold text-green-600">${totals.dealTotal.toFixed(2)}</div>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs font-semibold text-gray-500 uppercase mb-1">Grand Total</div>
+                          <div className="text-2xl font-bold text-gray-900">${totals.total.toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+
+            {/* Grand Total Summary */}
+            <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg shadow-xl p-6 border-2 border-indigo-700">
+              <div className="text-center mb-4">
+                <h3 className="text-2xl font-bold text-white mb-2">📊 Grand Total Summary</h3>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/30">
+                  <div className="text-sm font-semibold text-white/90 uppercase mb-2">Total Deposits</div>
+                  <div className="text-3xl font-bold text-white">${grandDepositTotal.toFixed(2)}</div>
+                </div>
+                <div className="bg-white/20 backdrop-blur-sm rounded-lg p-4 text-center border border-white/30">
+                  <div className="text-sm font-semibold text-white/90 uppercase mb-2">Total Deals</div>
+                  <div className="text-3xl font-bold text-white">${grandDealTotal.toFixed(2)}</div>
+                </div>
+                <div className="bg-white/30 backdrop-blur-sm rounded-lg p-4 text-center border-2 border-white/50">
+                  <div className="text-sm font-semibold text-white uppercase mb-2">Grand Total</div>
+                  <div className="text-4xl font-bold text-white">${grandTotal.toFixed(2)}</div>
                 </div>
               </div>
-            ))}
+            </div>
           </div>
         )}
       </div>
     </div>
   )
 }
-
