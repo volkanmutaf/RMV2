@@ -293,7 +293,7 @@ export default function DealsPage() {
                                 <>
                                   <button
                                     onClick={() => handleSaveEdit(deal.id)}
-                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors cursor-pointer"
                                   >
                                     ✓ Save
                                   </button>
@@ -302,7 +302,7 @@ export default function DealsPage() {
                                       setEditingDeal(null)
                                       setEditForm({dealNumber: '', type: '', insurance: ''})
                                     }}
-                                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                    className="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-semibold transition-colors cursor-pointer"
                                   >
                                     ✕ Cancel
                                   </button>
@@ -311,15 +311,15 @@ export default function DealsPage() {
                                 <>
                                   <button
                                     onClick={() => handleEditDeal(deal)}
-                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                    className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors cursor-pointer"
                                   >
-                                    ✏️ Edit
+                                    Edit
                                   </button>
                                   <button
                                     onClick={() => handleDeleteDeal(deal.id)}
-                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors"
+                                    className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-semibold transition-colors cursor-pointer"
                                   >
-                                    🗑️ Delete
+                                    Delete
                                   </button>
                                 </>
                               )}
