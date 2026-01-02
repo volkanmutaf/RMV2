@@ -39,7 +39,10 @@ export default function MechanicPage() {
   const [showArchived, setShowArchived] = useState(false)
   const [editingNote, setEditingNote] = useState<string | null>(null)
   const [editNoteText, setEditNoteText] = useState('')
-  const isAdmin = currentUser?.role === 'ADMIN'
+
+  // Permissions
+  const canEdit = currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER' || currentUser?.role === 'EDITOR'
+  const canFixPermission = currentUser?.role === 'ADMIN' || currentUser?.role === 'MANAGER' || currentUser?.role === 'EDITOR'
 
   useEffect(() => {
     fetchCurrentUser()
@@ -57,11 +60,7 @@ export default function MechanicPage() {
       const data = await response.json()
       if (data.user) {
         setCurrentUser(data.user)
-        // Only ADMIN, MANAGER, or specific users (caner, volkan) can access this page
-        const allowedUsers = ['ADMIN', 'MANAGER', 'caner', 'volkan']
-        if (!allowedUsers.includes(data.user.role) && !allowedUsers.includes(data.user.username)) {
-          router.push('/')
-        }
+        // Access is now open to all logged-in users
       } else {
         router.push('/login')
       }
@@ -88,14 +87,9 @@ export default function MechanicPage() {
 
   const handleFix = async (transactionId: string) => {
     if (!currentUser) return
-    
-    // Check if user can fix (caner, volkan, or admin)
-    const canFix = currentUser.username.toLowerCase() === 'caner' || 
-                   currentUser.username.toLowerCase() === 'volkan' || 
-                   currentUser.role === 'ADMIN'
-    
-    if (!canFix) {
-      alert('Only Caner, Volkan, or Admin can fix mechanic notes.')
+
+    if (!canFixPermission) {
+      alert('Only Admin, Manager, or Editor can fix mechanic notes.')
       return
     }
 
@@ -125,7 +119,7 @@ export default function MechanicPage() {
   }
 
   const handleUnfix = async (transactionId: string) => {
-    if (!currentUser || currentUser.role !== 'ADMIN') return
+    if (!canFixPermission) return
 
     // Confirmation dialog
     if (!confirm('Emin misiniz? Bu notu unfix yapmak istediğinizden emin misiniz? Not tekrar pending durumuna dönecek.')) {
@@ -233,12 +227,6 @@ export default function MechanicPage() {
     )
   }
 
-  const canFix = currentUser && (
-    currentUser.username.toLowerCase() === 'caner' || 
-    currentUser.username.toLowerCase() === 'volkan' || 
-    currentUser.role === 'ADMIN'
-  )
-
   // Filter notes by search term
   const filteredNotes = notes.filter(note => {
     if (!searchTerm) return true
@@ -301,11 +289,10 @@ export default function MechanicPage() {
               />
               <button
                 onClick={() => setShowArchived(!showArchived)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  showArchived
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${showArchived
                     ? 'bg-orange-600 hover:bg-orange-700 text-white'
                     : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
-                }`}
+                  }`}
               >
                 {showArchived ? 'Show Active' : 'Show Archived'}
               </button>
@@ -318,8 +305,8 @@ export default function MechanicPage() {
             <div className="text-6xl mb-4">🔧</div>
             <p className="text-gray-600 text-xl font-semibold">No mechanic notes found</p>
             <p className="text-gray-400 text-sm mt-2">
-              {showArchived 
-                ? 'No archived mechanic notes found.' 
+              {showArchived
+                ? 'No archived mechanic notes found.'
                 : 'Mechanic notes will appear here when added.'}
             </p>
           </div>
@@ -328,15 +315,14 @@ export default function MechanicPage() {
             {sortedNotes.map((note) => (
               <div
                 key={note.id}
-                className={`rounded-lg shadow-md p-3 border-2 transition-all relative ${
-                  note.noteArchived
+                className={`rounded-lg shadow-md p-3 border-2 transition-all relative ${note.noteArchived
                     ? 'bg-gray-50 border-gray-300'
                     : note.noteApproved
-                    ? 'bg-green-50 border-green-300'
-                    : 'bg-red-50 border-red-300'
-                }`}
+                      ? 'bg-green-50 border-green-300'
+                      : 'bg-red-50 border-red-300'
+                  }`}
               >
-                {isAdmin && (
+                {canEdit && (
                   <div className="absolute top-2 right-2 flex gap-1 z-10">
                     {editingNote === note.id ? (
                       <>
@@ -411,7 +397,7 @@ export default function MechanicPage() {
                     </span>
                   )}
                 </div>
-                
+
                 {editingNote === note.id ? (
                   <textarea
                     value={editNoteText}
@@ -425,7 +411,7 @@ export default function MechanicPage() {
                     {note.note}
                   </div>
                 )}
-                
+
                 <div className="text-[10px] text-gray-600 mb-1">
                   <div>Added by: <span className="font-semibold">{note.noteCreatedBy || 'Unknown'}</span></div>
                   {note.noteCreatedAt && (
@@ -446,7 +432,7 @@ export default function MechanicPage() {
                   </div>
                 )}
 
-                {!note.noteApproved && !note.noteArchived && canFix && (
+                {!note.noteApproved && !note.noteArchived && canFixPermission && (
                   <button
                     onClick={() => handleFix(note.id)}
                     className="w-full mt-2 px-2 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-lg text-[11px] font-medium transition-colors"
@@ -455,7 +441,7 @@ export default function MechanicPage() {
                   </button>
                 )}
 
-                {note.noteApproved && !note.noteArchived && isAdmin && (
+                {note.noteApproved && !note.noteArchived && canFixPermission && (
                   <button
                     onClick={() => handleUnfix(note.id)}
                     className="w-full mt-2 px-2 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-[11px] font-medium transition-colors"
@@ -471,4 +457,5 @@ export default function MechanicPage() {
     </div>
   )
 }
+
 

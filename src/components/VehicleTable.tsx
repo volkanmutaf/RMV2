@@ -1780,14 +1780,12 @@ ${mileage}`
                     👥 Users
                   </button>
                 )}
-            {(isAdmin || isManager) && (
               <button
                 onClick={() => window.open('/archive', '_blank')}
                 className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer"
               >
                 📁 Archive
               </button>
-            )}
                 <button
                   onClick={async () => {
                     await fetch('/api/auth/logout', { method: 'POST' })
