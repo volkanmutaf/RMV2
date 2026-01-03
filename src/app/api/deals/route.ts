@@ -32,6 +32,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Type must be DEPOSIT or DEAL' }, { status: 400 })
     }
 
+    // Check for duplicate deal number in existing Deals
+    const existingDeal = await prisma.deal.findFirst({
+      where: { dealNumber }
+    })
+
+    if (existingDeal) {
+      return NextResponse.json({ error: `A deal with number ${dealNumber} already exists in deals.` }, { status: 400 })
+    }
+
+    // Check for duplicate deal number in Transactions (both active and archived)
+    const existingTransaction = await prisma.transaction.findFirst({
+      where: {
+        ref: {
+          contains: dealNumber
+        }
+      }
+    })
+
+    if (existingTransaction) {
+      return NextResponse.json({
+        error: `A transaction with Ref ${dealNumber} already exists${existingTransaction.archived ? ' in archive' : ''}.`
+      }, { status: 400 })
+    }
+
     // Get user from database to get the ID
     const dbUser = await prisma.user.findUnique({
       where: { username: user.username }

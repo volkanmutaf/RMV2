@@ -20,28 +20,39 @@ export async function PUT(
 ) {
   try {
     const user = await getCurrentUser()
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Check permissions
-    const isStatusChange = request.headers.get('x-status-change') === 'true'
-    if (isStatusChange) {
-      // Status change: ADMIN or EDITOR can do this
+    const { id } = await params
+    const data = await request.json()
+
+    // Define fields that EDITOR and MANAGER (canEdit) are allowed to update
+    const allowedForEditor = [
+      'status',
+      'note',
+      'noteType',
+      'plate',
+      'preInspection',
+      'isUrgent'
+    ]
+
+    // Check if the update contains any restricted fields (requires ADMIN)
+    const updateKeys = Object.keys(data)
+    const hasRestrictedFields = updateKeys.some(key => !allowedForEditor.includes(key))
+
+    if (hasRestrictedFields) {
+      if (!isAdmin(user)) {
+        return NextResponse.json({ error: 'Unauthorized: Admin access required for these changes' }, { status: 403 })
+      }
+    } else {
+      // For allowed fields, check general edit permission
       if (!canEdit(user)) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
       }
-    } else {
-      // Other changes: Only ADMIN can do this
-      if (!isAdmin(user)) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-      }
     }
-    
-    const { id } = await params
-    const data = await request.json()
-    
+
     // Prepare update data
     const updateData: any = {
       plate: data.plate,
@@ -49,12 +60,12 @@ export async function PUT(
       noteType: data.noteType !== undefined ? data.noteType : undefined,
       ref: data.ref
     }
-    
+
     // If date is being changed
     if (data.date !== undefined) {
       updateData.date = new Date(data.date)
     }
-    
+
     // If contact is being changed, update customer
     if (data.contact !== undefined) {
       // Get transaction to find customerId
@@ -62,7 +73,7 @@ export async function PUT(
         where: { id },
         select: { customerId: true }
       })
-      
+
       if (transaction) {
         await prisma.customer.update({
           where: { id: transaction.customerId },
@@ -79,9 +90,9 @@ export async function PUT(
         updateData.lastUpdatedAt = new Date()
       }
     }
-    
+
     // If note is being changed, update noteCreatedBy and noteCreatedAt
-    if (data.note !== undefined && isStatusChange) {
+    if (data.note !== undefined) {
       updateData.noteCreatedBy = user.username
       updateData.noteCreatedAt = new Date()
       // Also update lastUpdatedBy for status changes
@@ -94,17 +105,17 @@ export async function PUT(
         updateData.noteApprovedAt = null
       }
     }
-    
+
     // If isUrgent is being changed
     if (data.isUrgent !== undefined) {
       updateData.isUrgent = data.isUrgent
     }
-    
+
     // If preInspection is being changed
     if (data.preInspection !== undefined) {
       updateData.preInspection = data.preInspection
     }
-    
+
     // Update transaction fields
     const updatedTransaction = await prisma.transaction.update({
       where: { id },
@@ -114,11 +125,11 @@ export async function PUT(
         customer: true
       }
     })
-    
+
     return NextResponse.json(updatedTransaction)
   } catch (error) {
     console.error('Error updating transaction:', error)
-    
+
     return NextResponse.json({ error: 'Failed to update transaction' }, { status: 500 })
   }
 }
@@ -130,21 +141,21 @@ export async function DELETE(
   try {
     // Admin kontrolü
     const user = await getCurrentUser()
-    
+
     if (!isAdmin(user)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
-    
+
     const { id } = await params
-    
+
     await prisma.transaction.delete({
       where: { id }
     })
-    
+
     return NextResponse.json({ message: 'Transaction deleted successfully' })
   } catch (error) {
     console.error('Error deleting transaction:', error)
-    
+
     return NextResponse.json({ error: 'Failed to delete transaction' }, { status: 500 })
   }
 }
