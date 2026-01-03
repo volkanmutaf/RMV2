@@ -26,9 +26,16 @@ export async function PUT(
     }
     
     const { id } = await params
-    const { amount, dealNumber, type, insurance } = await request.json()
+    const { amount, dealNumber, type, insurance, readByAdmin } = await request.json()
     
     const updateData: any = {}
+    
+    if (readByAdmin !== undefined) {
+      if (typeof readByAdmin !== 'boolean') {
+        return NextResponse.json({ error: 'readByAdmin must be a boolean' }, { status: 400 })
+      }
+      updateData.readByAdmin = readByAdmin
+    }
     
     if (amount !== undefined) {
       if (amount !== null && (typeof amount !== 'number' || isNaN(amount))) {

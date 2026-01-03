@@ -17,30 +17,30 @@ async function getCurrentUser(): Promise<UserSession | null> {
 export async function POST(request: NextRequest) {
   try {
     const user = await getCurrentUser()
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     const { dealNumber, type, insurance } = await request.json()
-    
+
     if (!dealNumber || dealNumber.length !== 4 || !/^\d{4}$/.test(dealNumber)) {
       return NextResponse.json({ error: 'Deal number must be exactly 4 digits' }, { status: 400 })
     }
-    
+
     if (!type || (type !== 'DEPOSIT' && type !== 'DEAL')) {
       return NextResponse.json({ error: 'Type must be DEPOSIT or DEAL' }, { status: 400 })
     }
-    
+
     // Get user from database to get the ID
     const dbUser = await prisma.user.findUnique({
       where: { username: user.username }
     })
-    
+
     if (!dbUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 })
     }
-    
+
     const deal = await prisma.deal.create({
       data: {
         dealNumber,
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
         }
       }
     })
-    
+
     return NextResponse.json(deal)
   } catch (error) {
     console.error('Error creating deal:', error)
@@ -69,16 +69,16 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   try {
     const user = await getCurrentUser()
-    
+
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-    
+
     // Only admin and manager can view all deals
     if (user.role !== 'ADMIN' && user.role !== 'MANAGER') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     }
-    
+
     const deals = await prisma.deal.findMany({
       include: {
         createdBy: {
@@ -93,7 +93,7 @@ export async function GET() {
         createdAt: 'desc'
       }
     })
-    
+
     // Get all transactions to match deal numbers with Ref column
     const transactions = await prisma.transaction.findMany({
       include: {
@@ -104,7 +104,7 @@ export async function GET() {
         archived: false,
       }
     })
-    
+
     // Match deals with transactions based on Ref column
     const dealsWithVehicles = deals.map(deal => {
       // Find transaction where Ref column matches deal number (4 digits)
@@ -114,7 +114,7 @@ export async function GET() {
         const refMatch = t.ref.match(/\b\d{4}\b/)
         return refMatch && refMatch[0] === deal.dealNumber
       })
-      
+
       return {
         ...deal,
         vehicle: matchingTransaction ? {
@@ -125,17 +125,9 @@ export async function GET() {
         } : null
       }
     })
-    
-    // Mark all deals as read when admin views the page
-    await prisma.deal.updateMany({
-      where: {
-        readByAdmin: false
-      },
-      data: {
-        readByAdmin: true
-      }
-    })
-    
+
+
+
     return NextResponse.json(dealsWithVehicles)
   } catch (error) {
     console.error('Error fetching deals:', error)
