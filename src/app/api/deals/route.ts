@@ -124,9 +124,7 @@ export async function GET() {
         vehicle: true,
         customer: true,
       },
-      where: {
-        archived: false,
-      }
+      // Removed where: { archived: false } to include archived transactions in the check
     })
 
     // Match deals with transactions based on Ref column
