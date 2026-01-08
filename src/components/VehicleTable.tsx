@@ -189,7 +189,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     { value: 'TITLE_PENDING', label: 'Title Pending' },
     { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
     { value: 'TITLE_REQUESTED', label: 'Title Requested' },
-    { value: 'DEPOSIT', label: 'Deposit' }
+    { value: 'DEPOSIT', label: 'Deposit' },
+    { value: 'READY_FOR_INSPECTION', label: 'Ready For Inspection' },
+    { value: 'READY_FOR_REGISTRATION', label: 'Ready For Registration' }
   ]
 
   const copyToClipboard = async (text: string) => {
@@ -531,6 +533,10 @@ ${mileage}`
         return 'bg-gradient-to-r from-cyan-50 to-cyan-100 text-cyan-700 border-cyan-200 shadow-sm'
       case 'DEPOSIT':
         return 'bg-gradient-to-r from-slate-50 to-slate-100 text-slate-600 border-slate-200 shadow-sm'
+      case 'READY_FOR_INSPECTION':
+        return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border-orange-200 shadow-sm'
+      case 'READY_FOR_REGISTRATION':
+        return 'bg-gradient-to-r from-lime-50 to-lime-100 text-lime-700 border-lime-200 shadow-sm'
       default:
         return 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200 shadow-sm'
     }
@@ -559,6 +565,10 @@ ${mileage}`
         return 'bg-gradient-to-r from-cyan-50 to-cyan-100 border-l-4 border-cyan-300 shadow-sm'
       case 'DEPOSIT':
         return 'bg-gradient-to-r from-slate-50 to-slate-100 border-l-4 border-slate-200 shadow-sm'
+      case 'READY_FOR_INSPECTION':
+        return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-300 shadow-sm'
+      case 'READY_FOR_REGISTRATION':
+        return 'bg-gradient-to-r from-lime-50 to-lime-100 border-l-4 border-lime-300 shadow-sm'
       default:
         return ''
     }

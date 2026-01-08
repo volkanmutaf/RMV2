@@ -110,6 +110,8 @@ enum VehicleStatus {
   AWAITING_STAMP
   TITLE_REQUESTED
   DEPOSIT
+  READY_FOR_INSPECTION
+  READY_FOR_REGISTRATION
 }
 
 // Note model for dashboard notes
