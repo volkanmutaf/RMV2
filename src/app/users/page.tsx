@@ -416,12 +416,11 @@ export default function UsersPage() {
                     <td className="px-4 py-3 text-sm text-gray-900">{user.username}</td>
                     <td className="px-4 py-3 text-sm text-gray-900">{user.name}</td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                        user.role === 'MANAGER' ? 'bg-purple-100 text-purple-800' :
-                        user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
+                          user.role === 'MANAGER' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                        }`}>
                         {user.role}
                       </span>
                     </td>
@@ -441,6 +440,14 @@ export default function UsersPage() {
                           className="px-3 py-1 bg-orange-600 text-white rounded hover:bg-orange-700 text-xs"
                         >
                           Reset Password
+                        </button>
+                        <button
+                          onClick={() => handleDelete(user.id)}
+                          className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                          disabled={currentUser?.id === user.id}
+                          title={currentUser?.id === user.id ? "Cannot delete yourself" : "Delete User"}
+                        >
+                          Delete
                         </button>
                       </div>
                     </td>
