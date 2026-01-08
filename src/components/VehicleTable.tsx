@@ -132,12 +132,14 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     vin: string
     customer: string
     contact: string
+    ref: string
   } | null>(null)
   const [editableData, setEditableData] = useState<{
     vehicle: string
     vin: string
     customer: string
     contact: string
+    ref: string
   } | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
