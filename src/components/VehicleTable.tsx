@@ -183,7 +183,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
     { value: 'DEPOSIT', label: 'Deposit' },
     { value: 'INSPECTED', label: 'Inspected' },
-    { value: 'OUT_OF_STATE_TITLE', label: 'Out of State Title' },
+    { value: 'OUT_OF_STATE', label: 'Out of State' },
     { value: 'PICKED_UP', label: 'Picked up' },
     { value: 'READY_FOR_INSPECTION', label: 'Ready For Inspection' },
     { value: 'READY_FOR_PICKUP', label: 'Ready for pick up' },
@@ -538,7 +538,7 @@ ${mileage}`
         return 'bg-gradient-to-r from-orange-50 to-orange-100 text-orange-700 border-orange-200 shadow-sm'
       case 'READY_FOR_REGISTRATION':
         return 'bg-gradient-to-r from-lime-50 to-lime-100 text-lime-700 border-lime-200 shadow-sm'
-      case 'OUT_OF_STATE_TITLE':
+      case 'OUT_OF_STATE':
         return 'bg-gradient-to-r from-fuchsia-50 to-fuchsia-100 text-fuchsia-700 border-fuchsia-200 shadow-sm'
       default:
         return 'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200 shadow-sm'
@@ -572,7 +572,7 @@ ${mileage}`
         return 'bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-300 shadow-sm'
       case 'READY_FOR_REGISTRATION':
         return 'bg-gradient-to-r from-lime-50 to-lime-100 border-l-4 border-lime-300 shadow-sm'
-      case 'OUT_OF_STATE_TITLE':
+      case 'OUT_OF_STATE':
         return 'bg-gradient-to-r from-fuchsia-50 to-fuchsia-100 border-l-4 border-fuchsia-300 shadow-sm'
       default:
         return ''

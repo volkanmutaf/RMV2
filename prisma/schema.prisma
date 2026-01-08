@@ -112,7 +112,7 @@ enum VehicleStatus {
   DEPOSIT
   READY_FOR_INSPECTION
   READY_FOR_REGISTRATION
-  OUT_OF_STATE_TITLE
+  OUT_OF_STATE
 }
 
 // Note model for dashboard notes
