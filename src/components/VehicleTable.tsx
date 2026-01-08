@@ -180,18 +180,18 @@ export default function VehicleTable({ transactions: initialTransactions, curren
 
   const statusOptions = [
     { value: '', label: 'Select Status' },
-    { value: 'TRANSFER_PLATE', label: 'Transfer Plate' },
-    { value: 'PICKED_UP', label: 'Picked up' },
+    { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
+    { value: 'DEPOSIT', label: 'Deposit' },
     { value: 'INSPECTED', label: 'Inspected' },
+    { value: 'PICKED_UP', label: 'Picked up' },
+    { value: 'READY_FOR_INSPECTION', label: 'Ready For Inspection' },
+    { value: 'READY_FOR_PICKUP', label: 'Ready for pick up' },
+    { value: 'READY_FOR_REGISTRATION', label: 'Ready For Registration' },
     { value: 'REGISTERED', label: 'Registered' },
     { value: 'RE_INSPECTION', label: 'Re-inspection' },
-    { value: 'READY_FOR_PICKUP', label: 'Ready for pick up' },
     { value: 'TITLE_PENDING', label: 'Title Pending' },
-    { value: 'AWAITING_STAMP', label: 'Awaiting Stamp' },
     { value: 'TITLE_REQUESTED', label: 'Title Requested' },
-    { value: 'DEPOSIT', label: 'Deposit' },
-    { value: 'READY_FOR_INSPECTION', label: 'Ready For Inspection' },
-    { value: 'READY_FOR_REGISTRATION', label: 'Ready For Registration' }
+    { value: 'TRANSFER_PLATE', label: 'Transfer Plate' }
   ]
 
   const copyToClipboard = async (text: string) => {
