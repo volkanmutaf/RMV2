@@ -156,6 +156,30 @@ export default function UsersPage() {
     }
   }
 
+  const handleDelete = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json()
+        setError(data.error || 'Failed to delete user')
+        return
+      }
+
+      setSuccess('User deleted successfully!')
+      fetchUsers()
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      setError('An error occurred. Please try again.')
+    }
+  }
+
   const handleResetPassword = async (userId: string) => {
     if (!confirm('Are you sure you want to reset this user\'s password? Default password will be "password123".')) {
       return
@@ -417,9 +441,9 @@ export default function UsersPage() {
                     <td className="px-4 py-3 text-sm text-gray-900">{user.name}</td>
                     <td className="px-4 py-3 text-sm">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.role === 'ADMIN' ? 'bg-red-100 text-red-800' :
-                          user.role === 'MANAGER' ? 'bg-purple-100 text-purple-800' :
-                            user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
+                        user.role === 'MANAGER' ? 'bg-purple-100 text-purple-800' :
+                          user.role === 'EDITOR' ? 'bg-blue-100 text-blue-800' :
+                            'bg-gray-100 text-gray-800'
                         }`}>
                         {user.role}
                       </span>
