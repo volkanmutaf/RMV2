@@ -409,8 +409,6 @@ ${mileage}`
           status: null,
           plate: '',
           note: '',
-          plate: '',
-          note: '',
           ref: editableData.ref || '',
           date: new Date()
         }
