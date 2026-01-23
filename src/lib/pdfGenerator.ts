@@ -55,9 +55,10 @@ export async function generateClaimPdf(data: ClaimData): Promise<Uint8Array> {
     const subtitleWidth = fontBold.widthOfTextAtSize(subtitle, 16)
 
     // Draw header at the top (taking into account the template might have margins, but user asked for it)
-    // height - 50 is standard top margin area
-    drawText(title, (width - titleWidth) / 2, height - 50, 16, true)
-    drawText(subtitle, (width - subtitleWidth) / 2, height - 70, 16, true)
+    // Lowered by request (approx 2-3 lines down)
+    const headerOffset = 40
+    drawText(title, (width - titleWidth) / 2, height - 50 - headerOffset, 16, true)
+    drawText(subtitle, (width - subtitleWidth) / 2, height - 70 - headerOffset, 16, true)
 
     // --- Content Layout (Adjusted for Template) ---
     // Moved startY down to accommodate letterhead (approx 150-200 units from top)
