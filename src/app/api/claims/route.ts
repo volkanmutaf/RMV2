@@ -1,9 +1,5 @@
-
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@/generated/prisma'
-import { generateClaimPdf } from '@/lib/pdfGenerator'
-import fs from 'fs'
-import path from 'path'
 
 const prisma = new PrismaClient()
 
@@ -89,7 +85,7 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(updatedClaim)
 
-        return NextResponse.json(claim)
+
 
     } catch (error) {
         console.error('Error creating claim:', error)
