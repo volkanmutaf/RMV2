@@ -1,5 +1,7 @@
 
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib'
+import fs from 'fs'
+import path from 'path'
 
 interface ClaimData {
     vehicleOwner: string
@@ -11,11 +13,22 @@ interface ClaimData {
 }
 
 export async function generateClaimPdf(data: ClaimData): Promise<Uint8Array> {
-    // Create a new PDF document
-    const pdfDoc = await PDFDocument.create()
 
-    // Add a blank page (Letter size)
-    const page = pdfDoc.addPage([612, 792]) // 8.5 x 11 inches
+    // Load existing PDF template
+    // NOTE: In Vercel, we need to read from the included file in the function
+    const templatePath = path.join(process.cwd(), 'public', 'storage', 'claims', 'claims.pdf')
+    let pdfDoc: PDFDocument
+
+    if (fs.existsSync(templatePath)) {
+        const templateBytes = fs.readFileSync(templatePath)
+        pdfDoc = await PDFDocument.load(templateBytes)
+    } else {
+        // Fallback if template missing (should not happen if deployed correctly)
+        pdfDoc = await PDFDocument.create()
+        pdfDoc.addPage([612, 792]) // Letter size
+    }
+
+    const page = pdfDoc.getPages()[0]
     const { width, height } = page.getSize()
 
     // Embed fonts
@@ -23,29 +36,20 @@ export async function generateClaimPdf(data: ClaimData): Promise<Uint8Array> {
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold)
 
     // Helper to draw text
-    const drawText = (text: string, x: number, y: number, size: number = 12, isBold: boolean = false) => {
+    const drawText = (text: string, x: number, y: number, size: number = 10, isBold: boolean = false) => {
         page.drawText(text, {
             x,
             y,
             size,
             font: isBold ? fontBold : font,
             color: rgb(0, 0, 0),
-            maxWidth: width - 100, // naive wrapping
+            maxWidth: width - 100,
         })
     }
 
-    // --- Header ---
-    const title = "AUTHORIZATION TO REPAIR,"
-    const subtitle = "ASSIGNMENT OF CLAIM & DIRECTION TO PAY"
-
-    const titleWidth = fontBold.widthOfTextAtSize(title, 16)
-    const subtitleWidth = fontBold.widthOfTextAtSize(subtitle, 16)
-
-    drawText(title, (width - titleWidth) / 2, height - 50, 16, true)
-    drawText(subtitle, (width - subtitleWidth) / 2, height - 70, 16, true)
-
-    // --- Grid / Info Section ---
-    const startY = height - 120
+    // --- Content Layout (Adjusted for Template) ---
+    // Moved startY down to accommodate letterhead (approx 150-200 units from top)
+    const startY = height - 200
     const lineHeight = 25
     const col1X = 50
     const col2X = 300
