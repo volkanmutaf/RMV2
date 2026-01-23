@@ -156,7 +156,26 @@ model Deal {
   @@map("deals")
 }
 
+
 enum DealType {
   DEPOSIT
   DEAL
+}
+
+// Claim model for Direction to Pay PDFs
+model Claim {
+  id              String   @id @default(uuid())
+  vehicleOwner    String   @map("vehicle_owner")
+  claimNumber     String?  @map("claim_number")
+  yearMakeModel   String   @map("year_make_model")
+  insuranceCompany String  @map("insurance_company")
+  policyNumber    String?  @map("policy_number")
+  vin             String
+  pdfPath         String   @map("pdf_path")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([vin])
+  @@index([claimNumber])
+  @@map("claims")
 }

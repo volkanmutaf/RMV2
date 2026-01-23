@@ -358,11 +358,9 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     // Format output as requested
     const output = `Stock No:
 ${stockNo}
-
 ${year}
 ${make}
 ${model}
-
 ${exteriorColor}
 ${vin}
 ${trim} 
@@ -1746,6 +1744,12 @@ ${mileage}`
                   >
                     🏷️ Key Label
                   </button>
+                  <a
+                    href="/claims"
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors touch-manipulation cursor-pointer inline-flex items-center"
+                  >
+                    📄 Claims
+                  </a>
                 </>
               )}
             </div>
