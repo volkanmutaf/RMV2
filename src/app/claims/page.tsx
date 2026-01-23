@@ -5,7 +5,19 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Download, Trash2, ArrowLeft } from 'lucide-react'
 
-// ... (interface remains same)
+
+interface Claim {
+    id: string
+    vehicleOwner: string
+    claimNumber: string | null
+    yearMakeModel: string
+    insuranceCompany: string
+    policyNumber: string | null
+    vin: string
+    pdfPath: string
+    createdAt: string
+}
+
 
 export default function ClaimsPage() {
     // ... (state and handlers remain same)
