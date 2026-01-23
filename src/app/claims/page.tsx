@@ -1,10 +1,8 @@
-
 'use client'
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Download, Trash2, ArrowLeft } from 'lucide-react'
-
 
 interface Claim {
     id: string
@@ -18,9 +16,35 @@ interface Claim {
     createdAt: string
 }
 
-
 export default function ClaimsPage() {
-    // ... (state and handlers remain same)
+    const [claims, setClaims] = useState<Claim[]>([])
+    const [loading, setLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState('')
+
+    useEffect(() => {
+        fetchClaims()
+    }, [])
+
+    const fetchClaims = async (query = '') => {
+        setLoading(true)
+        try {
+            const url = query ? `/api/claims?query=${encodeURIComponent(query)}` : '/api/claims'
+            const res = await fetch(url)
+            if (res.ok) {
+                const data = await res.json()
+                setClaims(data)
+            }
+        } catch (error) {
+            console.error('Failed to fetch claims', error)
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault()
+        fetchClaims(searchTerm)
+    }
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this claim?')) return
@@ -146,5 +170,4 @@ export default function ClaimsPage() {
             </div>
         </div>
     )
-
 }
