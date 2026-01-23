@@ -47,6 +47,18 @@ export async function generateClaimPdf(data: ClaimData): Promise<Uint8Array> {
         })
     }
 
+    // --- Header ---
+    const title = "AUTHORIZATION TO REPAIR,"
+    const subtitle = "ASSIGNMENT OF CLAIM & DIRECTION TO PAY"
+
+    const titleWidth = fontBold.widthOfTextAtSize(title, 16)
+    const subtitleWidth = fontBold.widthOfTextAtSize(subtitle, 16)
+
+    // Draw header at the top (taking into account the template might have margins, but user asked for it)
+    // height - 50 is standard top margin area
+    drawText(title, (width - titleWidth) / 2, height - 50, 16, true)
+    drawText(subtitle, (width - subtitleWidth) / 2, height - 70, 16, true)
+
     // --- Content Layout (Adjusted for Template) ---
     // Moved startY down to accommodate letterhead (approx 150-200 units from top)
     const startY = height - 200
@@ -102,6 +114,7 @@ I agree to cooperate with the Repair Facility and the insurance company to ensur
 
     // --- Signatures ---
     const sigY = currentY - 50
+    const currentDate = new Date().toLocaleDateString('en-US') // e.g. 1/23/2026
 
     // Vehicle Owner Signature
     page.drawLine({
@@ -111,6 +124,10 @@ I agree to cooperate with the Repair Facility and the insurance company to ensur
         color: rgb(0, 0, 0),
     })
     drawText("Vehicle Owner Signature / Date", 50, sigY - 15, 8)
+
+    // Add Date on line
+    // Line ends at 250, let's put date at approx 180
+    drawText(currentDate, 180, sigY + 2, 10)
 
     // Printed Name
     drawText("Printed Name:", 50, sigY - 35, 10, true)
@@ -124,6 +141,10 @@ I agree to cooperate with the Repair Facility and the insurance company to ensur
         color: rgb(0, 0, 0),
     })
     drawText("Repair Fclty. Authorized Rep. / Date", 300, sigY - 15, 8)
+
+    // Add Date on line
+    // Line ends at 500, let's put date at approx 430
+    drawText(currentDate, 430, sigY + 2, 10)
 
     return await pdfDoc.save()
 }
