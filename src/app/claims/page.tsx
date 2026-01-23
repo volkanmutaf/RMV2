@@ -46,6 +46,22 @@ export default function ClaimsPage() {
         fetchClaims(searchTerm)
     }
 
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this claim?')) return
+
+        try {
+            const res = await fetch(`/api/claims/${id}`, {
+                method: 'DELETE'
+            })
+            if (!res.ok) throw new Error('Failed to delete')
+            fetchClaims(searchTerm) // Refresh list
+        } catch (error) {
+            console.error(error)
+            alert('Failed to delete claim')
+        }
+    }
+
     return (
         <div className="min-h-screen bg-white p-6">
             <div className="max-w-7xl mx-auto space-y-6">
@@ -119,7 +135,7 @@ export default function ClaimsPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {claim.insuranceCompany}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
                                                 <a
                                                     href={`/api/claims/${claim.id}/pdf`}
                                                     target="_blank"
@@ -128,6 +144,12 @@ export default function ClaimsPage() {
                                                 >
                                                     Download PDF
                                                 </a>
+                                                <button
+                                                    onClick={() => handleDelete(claim.id)}
+                                                    className="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded hover:bg-red-100 transition-colors"
+                                                >
+                                                    Delete
+                                                </button>
                                             </td>
                                         </tr>
                                     ))
@@ -139,4 +161,5 @@ export default function ClaimsPage() {
             </div>
         </div>
     )
+
 }
