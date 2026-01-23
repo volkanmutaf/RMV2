@@ -55,36 +55,10 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
         }
 
-        console.log('API: Generating PDF...')
-        // Generate PDF
-        const pdfBytes = await generateClaimPdf({
-            vehicleOwner,
-            claimNumber,
-            yearMakeModel,
-            insuranceCompany,
-            policyNumber,
-            vin
-        })
-        console.log('API: PDF Generated, size:', pdfBytes.length)
+        // Generate dynamic PDF path (we will generate it on-the-fly)
+        // No need to save to FS (fixes Vercel EROFS error)
+        const relativePath = `/api/claims/DYNAMIC_ID_PLACEHOLDER/pdf`
 
-        // Save PDF to file system (dev implementation)
-        // Production should use S3/Blob storage
-        const storageDir = path.join(process.cwd(), 'public', 'storage', 'claims')
-        console.log('API: Ensuring storage directory:', storageDir)
-        if (!fs.existsSync(storageDir)) {
-            fs.mkdirSync(storageDir, { recursive: true })
-        }
-
-        // Helper to sanitize filename
-        const safeVin = vin.replace(/[^a-zA-Z0-9]/g, '')
-        const filename = `HE_DirectionToPay_${safeVin}_${Date.now()}.pdf`
-        const filePath = path.join(storageDir, filename)
-
-        console.log('API: Writing file to:', filePath)
-        fs.writeFileSync(filePath, pdfBytes)
-
-        // Save to DB
-        const relativePath = `/storage/claims/${filename}`
         console.log('API: Saving to DB...')
 
         // Debug check for prisma model
@@ -101,10 +75,19 @@ export async function POST(req: NextRequest) {
                 insuranceCompany,
                 policyNumber: policyNumber || null,
                 vin,
-                pdfPath: relativePath
+                pdfPath: relativePath // Placeholder, we can update if needed or just use ID in frontend
             }
         })
+
+        // Update the path now that we have the ID (optional, but good for consistency)
+        const updatedClaim = await prisma.claim.update({
+            where: { id: claim.id },
+            data: { pdfPath: `/api/claims/${claim.id}/pdf` }
+        })
+
         console.log('API: Claim created in DB:', claim.id)
+
+        return NextResponse.json(updatedClaim)
 
         return NextResponse.json(claim)
 

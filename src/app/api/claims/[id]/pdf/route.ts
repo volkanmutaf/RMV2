@@ -20,18 +20,25 @@ export async function GET(
             return NextResponse.json({ error: 'Claim not found' }, { status: 404 })
         }
 
-        const filePath = path.join(process.cwd(), 'public', claim.pdfPath)
 
-        if (!fs.existsSync(filePath)) {
-            return NextResponse.json({ error: 'PDF file not found' }, { status: 404 })
-        }
+        // Re-generate PDF on the fly
+        const { generateClaimPdf } = await import('@/lib/pdfGenerator')
 
-        const fileBuffer = fs.readFileSync(filePath)
+        const pdfBytes = await generateClaimPdf({
+            vehicleOwner: claim.vehicleOwner,
+            claimNumber: claim.claimNumber || undefined,
+            yearMakeModel: claim.yearMakeModel,
+            insuranceCompany: claim.insuranceCompany,
+            policyNumber: claim.policyNumber || undefined,
+            vin: claim.vin
+        })
 
-        return new NextResponse(fileBuffer, {
+        const filename = `DirectionToPay_${claim.vin}.pdf`
+
+        return new NextResponse(pdfBytes, {
             headers: {
                 'Content-Type': 'application/pdf',
-                'Content-Disposition': `attachment; filename="${path.basename(claim.pdfPath)}"`
+                'Content-Disposition': `attachment; filename="${filename}"`
             }
         })
 
