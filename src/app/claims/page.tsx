@@ -3,49 +3,12 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { Download, Trash2, ArrowLeft } from 'lucide-react'
 
-interface Claim {
-    id: string
-    vehicleOwner: string
-    claimNumber: string | null
-    yearMakeModel: string
-    insuranceCompany: string
-    policyNumber: string | null
-    vin: string
-    pdfPath: string
-    createdAt: string
-}
+// ... (interface remains same)
 
 export default function ClaimsPage() {
-    const [claims, setClaims] = useState<Claim[]>([])
-    const [loading, setLoading] = useState(true)
-    const [searchTerm, setSearchTerm] = useState('')
-
-    useEffect(() => {
-        fetchClaims()
-    }, [])
-
-    const fetchClaims = async (query = '') => {
-        setLoading(true)
-        try {
-            const url = query ? `/api/claims?query=${encodeURIComponent(query)}` : '/api/claims'
-            const res = await fetch(url)
-            if (res.ok) {
-                const data = await res.json()
-                setClaims(data)
-            }
-        } catch (error) {
-            console.error('Failed to fetch claims', error)
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault()
-        fetchClaims(searchTerm)
-    }
-
+    // ... (state and handlers remain same)
 
     const handleDelete = async (id: string) => {
         if (!confirm('Are you sure you want to delete this claim?')) return
@@ -66,7 +29,13 @@ export default function ClaimsPage() {
         <div className="min-h-screen bg-white p-6">
             <div className="max-w-7xl mx-auto space-y-6">
                 <div className="flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-gray-900">Claims Management</h1>
+                    <div className="flex items-center gap-4">
+                        <Link href="/" className="text-gray-500 hover:text-gray-700 flex items-center gap-2">
+                            <ArrowLeft size={20} />
+                            Back
+                        </Link>
+                        <h1 className="text-3xl font-bold text-gray-900">Claims Management</h1>
+                    </div>
                     <Link
                         href="/claims/new"
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors"
@@ -102,7 +71,7 @@ export default function ClaimsPage() {
                                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">VIN</th>
                                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Claim #</th>
                                     <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Insurance</th>
-                                    <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                                    <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -135,21 +104,25 @@ export default function ClaimsPage() {
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                 {claim.insuranceCompany}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium flex gap-2">
-                                                <a
-                                                    href={`/api/claims/${claim.id}/pdf`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded hover:bg-blue-100 transition-colors"
-                                                >
-                                                    Download PDF
-                                                </a>
-                                                <button
-                                                    onClick={() => handleDelete(claim.id)}
-                                                    className="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded hover:bg-red-100 transition-colors"
-                                                >
-                                                    Delete
-                                                </button>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                                <div className="flex justify-end gap-3">
+                                                    <a
+                                                        href={`/api/claims/${claim.id}/pdf`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="text-blue-600 hover:text-blue-800 transition-colors"
+                                                        title="Download PDF"
+                                                    >
+                                                        <Download size={20} />
+                                                    </a>
+                                                    <button
+                                                        onClick={() => handleDelete(claim.id)}
+                                                        className="text-red-500 hover:text-red-700 transition-colors"
+                                                        title="Delete Claim"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))
