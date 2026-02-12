@@ -215,7 +215,7 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             placeholder="Customer, VIN, Vehicle..."
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
                     <div>
@@ -223,7 +223,7 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                         <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                             <option value="">All Statuses</option>
                             <option value="no-status">No Status</option>
@@ -517,8 +517,8 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                             <button
                                 onClick={() => setShowSuccessNotification(false)}
                                 className={`px-6 py-2 rounded-lg font-medium transition-colors ${successMessage.includes('Error')
-                                        ? 'bg-red-500 hover:bg-red-600 text-white'
-                                        : 'bg-green-500 hover:bg-green-600 text-white'
+                                    ? 'bg-red-500 hover:bg-red-600 text-white'
+                                    : 'bg-green-500 hover:bg-green-600 text-white'
                                     }`}
                             >
                                 OK
