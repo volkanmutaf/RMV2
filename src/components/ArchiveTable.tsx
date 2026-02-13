@@ -354,111 +354,111 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
-                            <tbody className="bg-white divide-y divide-gray-100">
-                                {currentTransactions.map((transaction, index) => (
-                                    <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs text-gray-900 font-medium">
-                                                {formatDate(transaction.archivedAt)}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs text-gray-900 font-medium">
-                                                {formatDate(transaction.date)}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs text-gray-900 font-medium">
-                                                {(() => {
-                                                    const days = calculateDaysSince(transaction.date)
-                                                    if (days === 0) {
-                                                        return <span className="text-green-600 font-semibold">Today</span>
-                                                    } else if (days === 1) {
-                                                        return <span className="text-blue-600 font-semibold">1 day</span>
-                                                    } else if (days < 0) {
-                                                        return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
-                                                    } else {
-                                                        return <span className="text-gray-700">{days} days</span>
-                                                    }
-                                                })()}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs text-gray-900 font-medium">
-                                                {transaction.customer.name}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs font-semibold text-gray-900">
-                                                {formatVehicle(transaction.vehicle)}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs font-mono text-gray-600">
-                                                {transaction.vehicle.vin || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${getStatusColorClasses(transaction.status || '')}`}>
-                                                {transaction.status ?
-                                                    statusOptions.find(opt => opt.value === transaction.status)?.label ||
-                                                    transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                                                    : '-'
+
+                            {currentTransactions.map((transaction, index) => (
+                                <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs text-gray-900 font-medium">
+                                            {formatDate(transaction.archivedAt)}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs text-gray-900 font-medium">
+                                            {formatDate(transaction.date)}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs text-gray-900 font-medium">
+                                            {(() => {
+                                                const days = calculateDaysSince(transaction.date)
+                                                if (days === 0) {
+                                                    return <span className="text-green-600 font-semibold">Today</span>
+                                                } else if (days === 1) {
+                                                    return <span className="text-blue-600 font-semibold">1 day</span>
+                                                } else if (days < 0) {
+                                                    return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
+                                                } else {
+                                                    return <span className="text-gray-700">{days} days</span>
                                                 }
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs font-semibold text-gray-900">
-                                                {transaction.plate || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap relative">
-                                            {transaction.note ? (
-                                                <>
-                                                    <button
-                                                        onMouseEnter={() => setHoveredNoteId(transaction.id)}
-                                                        onMouseLeave={() => setHoveredNoteId(null)}
-                                                        className="text-xs px-3 py-1 rounded transition-colors cursor-pointer bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold"
-                                                    >
-                                                        📝 Note
-                                                    </button>
-                                                    {hoveredNoteId === transaction.id && (
-                                                        <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                                                            <div className="text-xs font-semibold text-blue-600 mb-2">
-                                                                📝 Note Preview:
-                                                            </div>
-                                                            <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                                                                {transaction.note}
-                                                            </div>
+                                            })()}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs text-gray-900 font-medium">
+                                            {transaction.customer.name}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs font-semibold text-gray-900">
+                                            {formatVehicle(transaction.vehicle)}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs font-mono text-gray-600">
+                                            {transaction.vehicle.vin || '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${getStatusColorClasses(transaction.status || '')}`}>
+                                            {transaction.status ?
+                                                statusOptions.find(opt => opt.value === transaction.status)?.label ||
+                                                transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                                                : '-'
+                                            }
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs font-semibold text-gray-900">
+                                            {transaction.plate || '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap relative">
+                                        {transaction.note ? (
+                                            <>
+                                                <button
+                                                    onMouseEnter={() => setHoveredNoteId(transaction.id)}
+                                                    onMouseLeave={() => setHoveredNoteId(null)}
+                                                    className="text-xs px-3 py-1 rounded transition-colors cursor-pointer bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold"
+                                                >
+                                                    📝 Note
+                                                </button>
+                                                {hoveredNoteId === transaction.id && (
+                                                    <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                                                        <div className="text-xs font-semibold text-blue-600 mb-2">
+                                                            📝 Note Preview:
                                                         </div>
-                                                    )}
-                                                </>
-                                            ) : (
-                                                <span className="text-xs text-gray-400">-</span>
-                                            )}
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs text-gray-600 font-mono">
-                                                {transaction.customer.contact || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <div className="text-xs font-semibold text-gray-900">
-                                                {transaction.ref || '-'}
-                                            </div>
-                                        </td>
-                                        <td className="px-3 py-2 whitespace-nowrap">
-                                            <button
-                                                onClick={() => confirmUnarchive(transaction.id)}
-                                                className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
-                                                title="Unarchive this transaction"
-                                            >
-                                                📤 Unarchive
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
+                                                        <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                                                            {transaction.note}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">-</span>
+                                        )}
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs text-gray-600 font-mono">
+                                            {transaction.customer.contact || '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <div className="text-xs font-semibold text-gray-900">
+                                            {transaction.ref || '-'}
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-2 whitespace-nowrap">
+                                        <button
+                                            onClick={() => confirmUnarchive(transaction.id)}
+                                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
+                                            title="Unarchive this transaction"
+                                        >
+                                            📤 Unarchive
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
                     </table>
                 </div>
 
