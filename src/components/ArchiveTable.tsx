@@ -23,6 +23,8 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
     const [showSuccessNotification, setShowSuccessNotification] = useState(false)
     const [successMessage, setSuccessMessage] = useState('')
     const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null)
+    const [currentPage, setCurrentPage] = useState(1)
+    const itemsPerPage = 50
 
     // Update transactions when prop changes
     useEffect(() => {
@@ -169,6 +171,11 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
         return matchesSearch && matchesStatus
     })
 
+    // Reset current page when filters change
+    useEffect(() => {
+        setCurrentPage(1)
+    }, [searchTerm, filterStatus])
+
     const sortedTransactions = [...filteredTransactions].sort((a, b) => {
         let aValue: any, bValue: any
 
@@ -202,6 +209,16 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
         if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1
         return 0
     })
+
+    // Pagination Logic
+    const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const currentTransactions = sortedTransactions.slice(startIndex, startIndex + itemsPerPage)
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
 
     return (
         <div className="space-y-4">
@@ -337,110 +354,111 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-100">
-                            {sortedTransactions.map((transaction, index) => (
-                                <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs text-gray-900 font-medium">
-                                            {formatDate(transaction.archivedAt)}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs text-gray-900 font-medium">
-                                            {formatDate(transaction.date)}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs text-gray-900 font-medium">
-                                            {(() => {
-                                                const days = calculateDaysSince(transaction.date)
-                                                if (days === 0) {
-                                                    return <span className="text-green-600 font-semibold">Today</span>
-                                                } else if (days === 1) {
-                                                    return <span className="text-blue-600 font-semibold">1 day</span>
-                                                } else if (days < 0) {
-                                                    return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
-                                                } else {
-                                                    return <span className="text-gray-700">{days} days</span>
+                            <tbody className="bg-white divide-y divide-gray-100">
+                                {currentTransactions.map((transaction, index) => (
+                                    <tr key={transaction.id} className={`${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs text-gray-900 font-medium">
+                                                {formatDate(transaction.archivedAt)}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs text-gray-900 font-medium">
+                                                {formatDate(transaction.date)}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs text-gray-900 font-medium">
+                                                {(() => {
+                                                    const days = calculateDaysSince(transaction.date)
+                                                    if (days === 0) {
+                                                        return <span className="text-green-600 font-semibold">Today</span>
+                                                    } else if (days === 1) {
+                                                        return <span className="text-blue-600 font-semibold">1 day</span>
+                                                    } else if (days < 0) {
+                                                        return <span className="text-gray-500">{Math.abs(days)} days ahead</span>
+                                                    } else {
+                                                        return <span className="text-gray-700">{days} days</span>
+                                                    }
+                                                })()}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs text-gray-900 font-medium">
+                                                {transaction.customer.name}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs font-semibold text-gray-900">
+                                                {formatVehicle(transaction.vehicle)}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs font-mono text-gray-600">
+                                                {transaction.vehicle.vin || '-'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${getStatusColorClasses(transaction.status || '')}`}>
+                                                {transaction.status ?
+                                                    statusOptions.find(opt => opt.value === transaction.status)?.label ||
+                                                    transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
+                                                    : '-'
                                                 }
-                                            })()}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs text-gray-900 font-medium">
-                                            {transaction.customer.name}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs font-semibold text-gray-900">
-                                            {formatVehicle(transaction.vehicle)}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs font-mono text-gray-600">
-                                            {transaction.vehicle.vin || '-'}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className={`text-xs font-medium px-2 py-1 rounded-full inline-block ${getStatusColorClasses(transaction.status || '')}`}>
-                                            {transaction.status ?
-                                                statusOptions.find(opt => opt.value === transaction.status)?.label ||
-                                                transaction.status.replace('_', ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())
-                                                : '-'
-                                            }
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs font-semibold text-gray-900">
-                                            {transaction.plate || '-'}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap relative">
-                                        {transaction.note ? (
-                                            <>
-                                                <button
-                                                    onMouseEnter={() => setHoveredNoteId(transaction.id)}
-                                                    onMouseLeave={() => setHoveredNoteId(null)}
-                                                    className="text-xs px-3 py-1 rounded transition-colors cursor-pointer bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold"
-                                                >
-                                                    📝 Note
-                                                </button>
-                                                {hoveredNoteId === transaction.id && (
-                                                    <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
-                                                        <div className="text-xs font-semibold text-blue-600 mb-2">
-                                                            📝 Note Preview:
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs font-semibold text-gray-900">
+                                                {transaction.plate || '-'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap relative">
+                                            {transaction.note ? (
+                                                <>
+                                                    <button
+                                                        onMouseEnter={() => setHoveredNoteId(transaction.id)}
+                                                        onMouseLeave={() => setHoveredNoteId(null)}
+                                                        className="text-xs px-3 py-1 rounded transition-colors cursor-pointer bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold"
+                                                    >
+                                                        📝 Note
+                                                    </button>
+                                                    {hoveredNoteId === transaction.id && (
+                                                        <div className="absolute z-50 left-0 top-full mt-1 w-64 bg-white border-2 border-blue-300 rounded-lg shadow-xl p-3">
+                                                            <div className="text-xs font-semibold text-blue-600 mb-2">
+                                                                📝 Note Preview:
+                                                            </div>
+                                                            <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
+                                                                {transaction.note}
+                                                            </div>
                                                         </div>
-                                                        <div className="text-xs text-gray-800 whitespace-pre-wrap max-h-32 overflow-y-auto">
-                                                            {transaction.note}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <span className="text-xs text-gray-400">-</span>
-                                        )}
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs text-gray-600 font-mono">
-                                            {transaction.customer.contact || '-'}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <div className="text-xs font-semibold text-gray-900">
-                                            {transaction.ref || '-'}
-                                        </div>
-                                    </td>
-                                    <td className="px-3 py-2 whitespace-nowrap">
-                                        <button
-                                            onClick={() => confirmUnarchive(transaction.id)}
-                                            className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
-                                            title="Unarchive this transaction"
-                                        >
-                                            📤 Unarchive
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+                                                    )}
+                                                </>
+                                            ) : (
+                                                <span className="text-xs text-gray-400">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs text-gray-600 font-mono">
+                                                {transaction.customer.contact || '-'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <div className="text-xs font-semibold text-gray-900">
+                                                {transaction.ref || '-'}
+                                            </div>
+                                        </td>
+                                        <td className="px-3 py-2 whitespace-nowrap">
+                                            <button
+                                                onClick={() => confirmUnarchive(transaction.id)}
+                                                className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors cursor-pointer flex items-center gap-1"
+                                                title="Unarchive this transaction"
+                                            >
+                                                📤 Unarchive
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
                     </table>
                 </div>
 
@@ -468,6 +486,91 @@ export default function ArchiveTable({ transactions: initialTransactions }: Arch
                                     Clear Filters
                                 </button>
                             )}
+                        </div>
+                    </div>
+                )}
+                {/* Pagination Controls */}
+                {sortedTransactions.length > 0 && (
+                    <div className="flex items-center justify-between bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg shadow-md">
+                        <div className="flex flex-1 justify-between sm:hidden">
+                            <button
+                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className={`relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className={`relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            >
+                                Next
+                            </button>
+                        </div>
+                        <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
+                            <div>
+                                <p className="text-sm text-gray-700">
+                                    Showing <span className="font-medium">{startIndex + 1}</span> to <span className="font-medium">{Math.min(startIndex + itemsPerPage, sortedTransactions.length)}</span> of{' '}
+                                    <span className="font-medium">{sortedTransactions.length}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className={`relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <span className="sr-only">Previous</span>
+                                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                    {[...Array(totalPages)].map((_, i) => {
+                                        const pageNumber = i + 1
+                                        // Logic to show limited page numbers (start, end, current, and surrounds)
+                                        if (
+                                            pageNumber === 1 ||
+                                            pageNumber === totalPages ||
+                                            (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)
+                                        ) {
+                                            return (
+                                                <button
+                                                    key={pageNumber}
+                                                    onClick={() => handlePageChange(pageNumber)}
+                                                    className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${currentPage === pageNumber
+                                                        ? 'z-10 bg-blue-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                                                        : 'text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0'
+                                                        }`}
+                                                >
+                                                    {pageNumber}
+                                                </button>
+                                            )
+                                        } else if (
+                                            pageNumber === currentPage - 2 ||
+                                            pageNumber === currentPage + 2
+                                        ) {
+                                            return (
+                                                <span key={pageNumber} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">
+                                                    ...
+                                                </span>
+                                            )
+                                        }
+                                        return null
+                                    })}
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className={`relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 ${currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <span className="sr-only">Next</span>
+                                        <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                            <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+                                        </svg>
+                                    </button>
+                                </nav>
+                            </div>
                         </div>
                     </div>
                 )}
