@@ -73,8 +73,7 @@ export default function VehicleTable({ transactions: initialTransactions, curren
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null)
   const [noteType, setNoteType] = useState<'GENERAL' | 'MECHANIC'>('GENERAL')
   const [showCopyNotification, setShowCopyNotification] = useState(false)
-  const [showSuccessNotification, setShowSuccessNotification] = useState(false)
-  const [successMessage, setSuccessMessage] = useState('')
+
   const [showNotification, setShowNotification] = useState(false)
   const [notificationMessage, setNotificationMessage] = useState('')
   const [notificationType, setNotificationType] = useState<'success' | 'error' | 'warning'>('success')
@@ -111,10 +110,10 @@ export default function VehicleTable({ transactions: initialTransactions, curren
     setNotificationType(type)
     setShowNotification(true)
 
-    // Auto hide after 5 seconds
+    // Auto hide after 2 seconds
     setTimeout(() => {
       setShowNotification(false)
-    }, 5000)
+    }, 2000)
   }
 
   // Admin IP kontrolü
@@ -435,8 +434,7 @@ ${mileage}`
           })
 
           // Show success notification
-          setSuccessMessage('Customer and Vehicle Added Successfully!')
-          setShowSuccessNotification(true)
+          showNotificationMessage('Customer and Vehicle Added Successfully!', 'success')
 
           // Reset form
           setQuickAddText('')
@@ -454,8 +452,7 @@ ${mileage}`
 
       } catch (error) {
         console.error('Error creating transaction:', error)
-        setSuccessMessage('Error adding customer and vehicle. Please try again.')
-        setShowSuccessNotification(true)
+        showNotificationMessage('Error adding customer and vehicle. Please try again.', 'error')
       }
     }
   }
@@ -929,8 +926,7 @@ ${mileage}`
       console.log('Archive successful:', result)
 
       // Show success notification
-      setSuccessMessage('Record added to archive successfully!')
-      setShowSuccessNotification(true)
+      showNotificationMessage('Record added to archive successfully!', 'success')
 
       // Refresh the page to show updated data
       setTimeout(() => {
@@ -939,8 +935,7 @@ ${mileage}`
 
     } catch (error) {
       console.error('Error archiving transaction:', error)
-      setSuccessMessage(`Error adding record to archive: ${error instanceof Error ? error.message : 'Unknown error'}`)
-      setShowSuccessNotification(true)
+      showNotificationMessage(`Error adding record to archive: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error')
     }
   }
 
@@ -1512,54 +1507,50 @@ ${mileage}`
 
   return (
     <div className="relative">
-      {/* Professional Notification */}
+      {/* Professional Notification (Toast) */}
       {showNotification && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className={`max-w-md w-full mx-4 p-6 rounded-lg shadow-xl transform transition-all duration-300 ${notificationType === 'error' ? 'bg-red-50 border-2 border-red-200' :
-            notificationType === 'warning' ? 'bg-yellow-50 border-2 border-yellow-200' :
-              'bg-green-50 border-2 border-green-200'
+        <div className="fixed top-4 right-4 z-[100] animate-in slide-in-from-top-5 fade-in duration-300">
+          <div className={`max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden ${notificationType === 'error' ? 'border-l-4 border-red-500' :
+            notificationType === 'warning' ? 'border-l-4 border-yellow-500' :
+              'border-l-4 border-green-500'
             }`}>
-            <div className="flex items-center">
-              <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${notificationType === 'error' ? 'bg-red-100' :
-                notificationType === 'warning' ? 'bg-yellow-100' :
-                  'bg-green-100'
-                }`}>
-                {notificationType === 'error' ? (
-                  <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                ) : notificationType === 'warning' ? (
-                  <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                )}
+            <div className="p-4">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  {notificationType === 'error' ? (
+                    <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  ) : notificationType === 'warning' ? (
+                    <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  ) : (
+                    <svg className="h-6 w-6 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  )}
+                </div>
+                <div className="ml-3 w-0 flex-1 pt-0.5">
+                  <p className="text-sm font-medium text-gray-900">
+                    {notificationType === 'error' ? 'Error' : notificationType === 'warning' ? 'Warning' : 'Success'}
+                  </p>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {notificationMessage}
+                  </p>
+                </div>
+                <div className="ml-4 flex-shrink-0 flex">
+                  <button
+                    className="bg-white rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    onClick={() => setShowNotification(false)}
+                  >
+                    <span className="sr-only">Close</span>
+                    <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              <div className="ml-3 flex-1">
-                <p className={`text-sm font-medium ${notificationType === 'error' ? 'text-red-800' :
-                  notificationType === 'warning' ? 'text-yellow-800' :
-                    'text-green-800'
-                  }`}>
-                  {notificationMessage}
-                </p>
-              </div>
-              <button
-                onClick={() => setShowNotification(false)}
-                className={`ml-4 flex-shrink-0 rounded-md p-1.5 ${notificationType === 'error' ? 'text-red-500 hover:bg-red-100' :
-                  notificationType === 'warning' ? 'text-yellow-500 hover:bg-yellow-100' :
-                    'text-green-500 hover:bg-green-100'
-                  } focus:outline-none focus:ring-2 focus:ring-offset-2 ${notificationType === 'error' ? 'focus:ring-red-500' :
-                    notificationType === 'warning' ? 'focus:ring-yellow-500' :
-                      'focus:ring-green-500'
-                  }`}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                </svg>
-              </button>
             </div>
           </div>
         </div>
@@ -1581,43 +1572,6 @@ ${mileage}`
         </div>
       )}
 
-      {/* Success/Error Notification */}
-      {showSuccessNotification && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md mx-4 transform transition-all duration-300 scale-100">
-            <div className="text-center">
-              <div className={`mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4 ${successMessage.includes('Error') ? 'bg-red-100' : 'bg-green-100'
-                }`}>
-                {successMessage.includes('Error') ? (
-                  <svg className="h-8 w-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg className="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <h3 className={`text-lg font-bold mb-2 ${successMessage.includes('Error') ? 'text-red-600' : 'text-gray-900'
-                }`}>
-                {successMessage.includes('Error') ? '❌ Error!' : '🎉 Success!'}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {successMessage}
-              </p>
-              <button
-                onClick={() => setShowSuccessNotification(false)}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors duration-200 shadow-md hover:shadow-lg cursor-pointer ${successMessage.includes('Error')
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-blue-600 hover:bg-blue-700 text-white'
-                  }`}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Compact Professional Header */}
       <div className="bg-gradient-to-r from-slate-800 to-slate-700 text-white rounded-lg shadow-lg border-b-2 border-blue-500 mb-4">
