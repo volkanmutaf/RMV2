@@ -9,7 +9,7 @@ import VehicleModal from '@/components/claims/VehicleModal'
 
 export default function ClaimsSummaryPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
-    const [editingVehicle, setEditingVehicle] = useState(null)
+    const [editingVehicle, setEditingVehicle] = useState<any>(null)
     const [refreshTrigger, setRefreshTrigger] = useState(0)
 
     const handleAddClick = () => {
