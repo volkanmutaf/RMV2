@@ -179,3 +179,20 @@ model Claim {
   @@index([claimNumber])
   @@map("claims")
 }
+
+// Model for the new vehicle cards grid
+model ClaimVehicle {
+  id          String   @id @default(cuid())
+  year        String
+  make        String
+  model       String
+  color       String?
+  vin         String?
+  description String?
+  isArchived  Boolean  @default(false) @map("is_archived")
+  archivedAt  DateTime? @map("archived_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("claim_vehicles")
+}
