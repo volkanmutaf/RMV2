@@ -6,10 +6,13 @@ import Link from 'next/link'
 import { ArrowLeft, Archive, List } from 'lucide-react'
 import VehicleGrid from '@/components/claims/VehicleGrid'
 import VehicleModal from '@/components/claims/VehicleModal'
+import VehicleViewModal from '@/components/claims/VehicleViewModal'
 
 export default function ClaimsSummaryPage() {
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isViewModalOpen, setIsViewModalOpen] = useState(false)
     const [editingVehicle, setEditingVehicle] = useState<any>(null)
+    const [viewingVehicle, setViewingVehicle] = useState<any>(null)
     const [refreshTrigger, setRefreshTrigger] = useState(0)
 
     const handleAddClick = () => {
@@ -20,6 +23,11 @@ export default function ClaimsSummaryPage() {
     const handleEditClick = (vehicle: any) => {
         setEditingVehicle(vehicle)
         setIsModalOpen(true)
+    }
+
+    const handleViewClick = (vehicle: any) => {
+        setViewingVehicle(vehicle)
+        setIsViewModalOpen(true)
     }
 
     const handleSave = async (formData: any) => {
@@ -84,6 +92,7 @@ export default function ClaimsSummaryPage() {
                 <VehicleGrid
                     onAddClick={handleAddClick}
                     onEditClick={handleEditClick}
+                    onViewClick={handleViewClick}
                     refreshTrigger={refreshTrigger}
                 />
 
@@ -93,6 +102,13 @@ export default function ClaimsSummaryPage() {
                     onClose={() => setIsModalOpen(false)}
                     onSave={handleSave}
                     initialData={editingVehicle}
+                />
+
+                {/* Modal for Viewing Details */}
+                <VehicleViewModal
+                    isOpen={isViewModalOpen}
+                    onClose={() => setIsViewModalOpen(false)}
+                    vehicle={viewingVehicle}
                 />
             </div>
         </div>

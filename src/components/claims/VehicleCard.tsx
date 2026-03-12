@@ -16,11 +16,14 @@ interface VehicleCardProps {
     }
     onEdit: (vehicle: any) => void
     onArchive: (id: string) => void
+    onView: (vehicle: any) => void
 }
 
-export default function VehicleCard({ vehicle, onEdit, onArchive }: VehicleCardProps) {
+export default function VehicleCard({ vehicle, onEdit, onArchive, onView }: VehicleCardProps) {
     return (
-        <div className={`relative flex flex-col p-5 rounded-2xl shadow-sm border-2 transition-all duration-500 group overflow-hidden ${
+        <div 
+            onClick={() => onView(vehicle)}
+            className={`relative flex flex-col p-5 rounded-2xl shadow-sm border-2 transition-all duration-500 group overflow-hidden cursor-pointer ${
             vehicle.isArchived 
             ? 'bg-gradient-to-br from-green-50 to-white border-green-200' 
             : 'bg-white border-gray-100 hover:border-blue-500 hover:shadow-xl hover:-translate-y-1'
@@ -40,14 +43,14 @@ export default function VehicleCard({ vehicle, onEdit, onArchive }: VehicleCardP
                     
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-2 group-hover:translate-x-0">
                         <button
-                            onClick={() => onEdit(vehicle)}
+                            onClick={(e) => { e.stopPropagation(); onEdit(vehicle); }}
                             className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded-lg transition-all"
                             title="Edit vehicle"
                         >
                             <Edit2 size={15} />
                         </button>
                         <button
-                            onClick={() => onArchive(vehicle.id)}
+                            onClick={(e) => { e.stopPropagation(); onArchive(vehicle.id); }}
                             className={`p-1.5 rounded-lg transition-all ${
                                 vehicle.isArchived 
                                 ? 'text-green-600 bg-green-50' 

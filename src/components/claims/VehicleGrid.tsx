@@ -8,11 +8,12 @@ import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react'
 interface VehicleGridProps {
     onAddClick: () => void
     onEditClick: (vehicle: any) => void
+    onViewClick: (vehicle: any) => void
     refreshTrigger: number
     archived?: boolean
 }
 
-export default function VehicleGrid({ onAddClick, onEditClick, refreshTrigger, archived = false }: VehicleGridProps) {
+export default function VehicleGrid({ onAddClick, onEditClick, onViewClick, refreshTrigger, archived = false }: VehicleGridProps) {
     const [vehicles, setVehicles] = useState([])
     const [loading, setLoading] = useState(true)
     const [pagination, setPagination] = useState({ currentPage: 1, pages: 1 })
@@ -85,6 +86,7 @@ export default function VehicleGrid({ onAddClick, onEditClick, refreshTrigger, a
                         vehicle={vehicle}
                         onEdit={onEditClick}
                         onArchive={handleArchive}
+                        onView={onViewClick}
                     />
                 ))}
             </div>
