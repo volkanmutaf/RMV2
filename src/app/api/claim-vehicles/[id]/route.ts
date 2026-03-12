@@ -4,9 +4,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = params
+    const { id } = await params
 
     try {
         const body = await request.json()
@@ -38,9 +38,9 @@ export async function PATCH(
 
 export async function DELETE(
     request: Request,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
-    const { id } = params
+    const { id } = await params
 
     try {
         await prisma.claimVehicle.delete({
